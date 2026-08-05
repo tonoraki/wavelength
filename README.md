@@ -74,6 +74,7 @@ node server.js
 
 - `""`(空)= 不需要密码
 - 设置密码后:**同一设备 IP 首次连接**需输入密码,认证过的设备记录在 `auth-ips.json`,重启服务器无需重输;删除该文件可重置所有设备
+- 密码只保护**联网对局**(控制器/监视器);未认证的设备可以在密码页直接点「🎲 跳过密码,本地热座游玩」,在**本设备**上玩单机热座版(不影响他人联网,下次刷新页面仍可输入密码加入联网)
 - 密码比对使用时序安全比较;未认证设备的 API 请求一律 401
 
 ## 网络稳定性(现场网络不稳友好)
@@ -90,6 +91,35 @@ node server.js
 **单机本地玩**:把 `index.html` + `game.js` 一起(可以整个文件夹)AirDrop/存入 iPad「文件」App,用 **Documents by Readdle** 等文件浏览器打开 `index.html`,自动进入本地热座模式(注意:直接双击文件是打不开的,iOS 需要这类 App 运行 HTML)。
 
 **多人联机**:电脑跑 `node server.js`,iPad 用浏览器访问局域网地址,选「控制器」即可;电脑开监视器观看。
+
+## 在线托管(无后端版,任何人打开网址即玩)
+
+把仓库的**整个根目录**(或仅 `index.html` + `game.js` + `cards.json`)当作静态站点部署到任意静态托管,访问者打开网址即可直接玩**本地热座版**——页面会自动检测到没有后端并进入本地模式。
+
+- 仓库保持私密即可;**`config.json`、`auth-ips.json` 已被 gitignore,不会随仓库暴露**
+- 部署在第三方平台时,托管的是仓库内文件的公开副本(只有游戏代码,无任何秘密)
+- 联网模式(控制器/监视器、密码)是 `server.js` 的功能,只能在你自己运行的 Node 服务器上生效
+
+### Netlify(推荐,免费)
+
+1. 打开 https://app.netlify.com 用 GitHub 账号登录
+2. Add new site → Import an existing project → 选择私密仓库 `wavelength`
+3. Build command 留空 / Publish directory 填 `.`(仓库根目录)
+4. Deploy 完成后得到 `https://<名称>.netlify.app` 网址,可自定义域名
+
+### Vercel(免费)
+
+1. 打开 https://vercel.com 用 GitHub 登录
+2. Add New Project → Import 私密仓库 `wavelength`
+3. Framework Preset 选 Other / Build Command 留空,Deploy
+4. 得到 `https://<名称>.vercel.app`
+
+### Cloudflare Pages(免费)
+
+1. https://dash.cloudflare.com → Workers & Pages → Create → Connect to GitHub
+2. 选择私密仓库,Framework 选 None,Build command 留空,Build output directory 填 `.`
+
+部署后访问者打开网址即可玩;本机开发/局域网联机仍用 `node server.js`。
 
 ## 测试
 

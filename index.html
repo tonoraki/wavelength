@@ -338,12 +338,13 @@
 <div class="modal-mask hidden" id="auth-modal">
   <div class="modal">
     <h2>🔒 需要密码</h2>
-    <p>此设备首次连接本服务器，请输入访问密码。</p>
+    <p>输入密码加入<span class="warn">联网对局</span>(控制器/监视器实时同步);<br>也可以跳过密码,直接在<span class="warn">本设备</span>上玩本地热座版(不影响他人联网)。</p>
     <div class="field">
       <input type="password" id="auth-password" placeholder="输入密码" autocomplete="off">
     </div>
     <div class="deck-msg" id="auth-msg"></div>
-    <button class="btn primary" id="btn-auth" style="width:100%">确认</button>
+    <button class="btn primary" id="btn-auth" style="width:100%">确认密码，进入联网</button>
+    <button class="btn" id="btn-guest" style="width:100%;margin-top:10px">🎲 跳过密码，本地热座游玩</button>
   </div>
 </div>
 
@@ -1008,6 +1009,16 @@
     enterOnline();
   }
 
+  function enterGuest() {
+    ONLINE = false;
+    $("auth-modal").classList.add("hidden");
+    $("auth-password").value = "";
+    $("auth-msg").textContent = "";
+    setConn("local");
+    initLocalDeck();
+    render();
+  }
+
   function enterOnline() {
     setConn("connecting");
     connectSSE();
@@ -1107,6 +1118,7 @@
     render();
   };
   $("btn-auth").onclick = submitAuth;
+  $("btn-guest").onclick = enterGuest;
   $("auth-password").addEventListener("keydown", function (e) {
     if (e.key === "Enter") submitAuth();
   });
