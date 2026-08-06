@@ -216,7 +216,8 @@
 
   .modal-mask {
     position: fixed; inset: 0; background: rgba(8, 5, 20, .88);
-    display: flex; align-items: center; justify-content: center; z-index: 50; padding: 20px;
+    display: flex; justify-content: center; padding: 20px;
+    overflow-y: auto; z-index: 50;
   }
   #role-modal { z-index: 60; }
   #auth-modal { z-index: 70; }
@@ -224,6 +225,7 @@
   .modal {
     background: var(--panel); border: 1px solid var(--line); border-radius: 20px;
     padding: 30px; max-width: 460px; width: 100%; text-align: center;
+    margin: auto;
   }
   .modal h2 { margin-bottom: 8px; font-size: 24px; }
   .modal p { color: var(--dim); font-size: 14px; margin-bottom: 18px; line-height: 1.6; }
@@ -267,8 +269,8 @@
 
   <header>
     <div>
-      <h1>WAVELENGTH</h1>
-      <div class="sub">心灵波长 · <span id="deck-badge"></span> · <span id="conn-badge"><span class="dot"></span></span></div>
+      <h1 id="title-main">WAVELENGTH</h1>
+      <div class="sub"><span id="sub-title">心灵波长</span> · <span id="deck-badge"></span> · <span id="conn-badge"><span class="dot"></span></span></div>
     </div>
     <button class="btn" id="btn-restart">重新开始</button>
   </header>
@@ -359,7 +361,7 @@
 
 <div class="modal-mask" id="setup-modal">
   <div class="modal">
-    <h2>🎧 Wavelength</h2>
+    <h2 id="setup-title">🎧 Wavelength</h2>
     <p>两队轮流派出一位「Psychic」出题，本队猜目标位置，对方猜左右。先拿 10 分获胜。</p>
     <div class="field-row">
       <div class="field">
@@ -404,11 +406,26 @@
         <p>2 个概念 = 单面卡；4 个概念 = 双面卡（Psychic 可选一面）。概念文字中请勿使用逗号。</p>
       </details>
     </div>
+    <div class="field">
+      <label>文案（游戏名 / 术语）</label>
+      <div class="deck-row">
+        <span class="deck-info" id="names-info"></span>
+        <button type="button" class="btn" id="btn-load-names">选择文件…</button>
+        <button type="button" class="btn" id="btn-reset-names">恢复默认</button>
+      </div>
+      <div class="deck-msg" id="names-msg"></div>
+      <details class="deck-help">
+        <summary>文案文件格式</summary>
+        <p><b>JSON</b>（如 names.json）：键值对象，键可省略，省略的键用默认值。常用键：gameName / gameTitle / gameSubtitle / psychic（出题人）/ dial（拨杆）/ target（目标）/ teamDefaultA / teamDefaultB。</p>
+        <p>联网模式下服务器自动加载服务器目录下的 <b>names.json</b>，改完刷新即可生效。</p>
+      </details>
+    </div>
     <button class="btn primary" id="btn-start" style="width:100%">开始游戏</button>
   </div>
 </div>
 
 <input type="file" id="file-deck" accept=".json,.yaml,.yml" hidden>
+<input type="file" id="file-names" accept=".json" hidden>
 
 <div class="modal-mask hidden" id="over-modal">
   <div class="modal">
@@ -440,6 +457,118 @@
   var retryDelay = 1000;
 
   var $ = function (id) { return document.getElementById(id); };
+
+  var NAMES_DEFAULT = {
+    gameName: "Wavelength",
+    gameTitle: "WAVELENGTH",
+    gameSubtitle: "心灵波长",
+    psychic: "Psychic",
+    clue: "线索",
+    dial: "拨杆",
+    target: "目标",
+    wedge: "楔形",
+    screen: "屏幕",
+    roundUnit: "轮",
+    leftRight: "左右",
+    catchup: "追赶规则",
+    suddenDeath: "加时赛",
+    perfectHit: "完美命中",
+    teamDefaultA: "左脑",
+    teamDefaultB: "右脑",
+    restartBtn: "重新开始",
+    playagainBtn: "再来一局",
+    startBtn: "开始游戏"
+  };
+  var NAMES = null;
+
+  function T(k) {
+    if (NAMES && typeof NAMES[k] === "string" && NAMES[k] !== "") return NAMES[k];
+    return NAMES_DEFAULT[k] !== undefined ? NAMES_DEFAULT[k] : k;
+  }
+
+  function mergeNames(obj) {
+    if (!obj || typeof obj !== "object" || Array.isArray(obj)) return false;
+    NAMES = {};
+    Object.keys(NAMES_DEFAULT).forEach(function (k) {
+      if (typeof obj[k] === "string" && obj[k] !== "") NAMES[k] = obj[k];
+    });
+    return true;
+  }
+
+  function namesMsg(text, ok) {
+    var el = $("names-msg");
+    el.textContent = text;
+    el.className = "deck-msg" + (ok ? " ok" : " err");
+  }
+
+  function applyNames() {
+    document.title = T("gameTitle") + " · " + T("gameSubtitle");
+    $("title-main").textContent = T("gameTitle");
+    $("sub-title").textContent = T("gameSubtitle");
+    $("setup-title").textContent = "🎧 " + T("gameName");
+    $("btn-restart").textContent = T("restartBtn");
+    $("btn-playagain").textContent = T("playagainBtn");
+    $("btn-start").textContent = T("startBtn");
+    $("input-nameA").value = T("teamDefaultA");
+    $("input-nameB").value = T("teamDefaultB");
+    $("names-info").textContent = NAMES ? "自定义文案" : "默认文案";
+    render();
+  }
+
+  function loadNamesText(rawText) {
+    var obj;
+    try {
+      obj = JSON.parse(rawText);
+    } catch (e) {
+      namesMsg("文案加载失败：" + e.message, false);
+      return;
+    }
+    if (!mergeNames(obj)) {
+      namesMsg("文案格式错误：应为键值对象，如 {\"gameName\": \"…\"}", false);
+      return;
+    }
+    try { localStorage.setItem("wl_names", rawText); } catch (e) {}
+    namesMsg("已加载文案，游戏名：" + T("gameName"), true);
+    applyNames();
+  }
+
+  function resetNames() {
+    try { localStorage.removeItem("wl_names"); } catch (e) {}
+    NAMES = null;
+    namesMsg("已恢复默认文案", true);
+    applyNames();
+    tryFetchNames();
+  }
+
+  function tryFetchNames() {
+    if (typeof fetch !== "function") return;
+    fetch("names.json").then(function (r) {
+      if (!r.ok) throw new Error("http " + r.status);
+      return r.text();
+    }).then(function (t) {
+      if (mergeNames(JSON.parse(t))) {
+        namesMsg("已加载服务器文案，游戏名：" + T("gameName"), true);
+        applyNames();
+      }
+    }).catch(function () {});
+  }
+
+  function initNames() {
+    var saved = null;
+    try { saved = localStorage.getItem("wl_names"); } catch (e) {}
+    if (saved) {
+      try {
+        if (mergeNames(JSON.parse(saved))) {
+          applyNames();
+          return;
+        }
+      } catch (e) {
+        try { localStorage.removeItem("wl_names"); } catch (e2) {}
+      }
+    }
+    applyNames();
+    tryFetchNames();
+  }
 
   function canControl() {
     return (ROLE === "local" || ROLE === "controller") && (ROLE === "local" || connState === "ok");
@@ -652,8 +781,8 @@
     var t = G.teams[G.active];
     var who = "<b class='" + (G.active === "A" ? "a" : "b") + "'>" + t.name + "</b>";
     if (G.catchup) {
-      $("turn-indicator").innerHTML = "🔥 追赶规则触发：" + who + " 本轮 4 分且仍落后，继续行动！";
-      $("banner").textContent = "追赶规则：4 分 + 落后 = " + G.teams[G.active].name + " 立刻再行动一轮（换一位新 Psychic）";
+      $("turn-indicator").innerHTML = "🔥 " + T("catchup") + "触发：" + who + " 本轮 4 分且仍落后，继续行动！";
+      $("banner").textContent = T("catchup") + "：4 分 + 落后 = " + G.teams[G.active].name + " 立刻再行动一轮（换一位新 " + T("psychic") + "）";
       $("banner").classList.remove("hidden");
     } else {
       $("turn-indicator").innerHTML = "轮到 " + who + " 行动";
@@ -664,7 +793,7 @@
   function renderCard() {
     var c = G.card;
     if (!c) return;
-    $("card-label").textContent = "第 " + G.round + " 轮 · " + G.teams[G.active].name + " 的 Psychic 读卡";
+    $("card-label").textContent = "第 " + G.round + " " + T("roundUnit") + " · " + G.teams[G.active].name + " 的 " + T("psychic") + " 读卡";
     var box = $("sides");
     box.innerHTML = "";
     var opts = WL.cardSides(c);
@@ -744,51 +873,51 @@
     if (G.phase === "setup") {
       hint.innerHTML = ROLE === "monitor"
         ? "等待控制器开始游戏…"
-        : "填写队伍信息并点击「开始游戏」。";
-      if (control) box.appendChild(mk("开始游戏", "primary", startGame));
+        : "填写队伍信息并点击「" + T("startBtn") + "」。";
+      if (control) box.appendChild(mk(T("startBtn"), "primary", startGame));
     } else if (G.phase === "psychic") {
-      hint.innerHTML = "<b>" + t.name + "</b> 的 Psychic 步骤：选好卡片面 → 点击「查看目标」（<span class='warn'>请确保其他人没有偷看屏幕！</span>）→ 口述线索 → 关闭屏幕，之后不能再说话。";
+      hint.innerHTML = "<b>" + t.name + "</b> 的 " + T("psychic") + " 步骤：选好卡片面 → 点击「查看" + T("target") + "」（<span class='warn'>请确保其他人没有偷看屏幕！</span>）→ 口述" + T("clue") + " → 关闭" + T("screen") + "，之后不能再说话。";
       if (control) {
         if (psychicViewing) {
-          box.appendChild(mk("我记住了，关闭屏幕", "magenta", function () {
+          box.appendChild(mk("我记住了，关闭" + T("screen"), "magenta", function () {
             psychicViewing = false;
             dispatch({ type: "donePsychic" });
           }));
         } else {
-          box.appendChild(mk("查看目标（仅 Psychic）", "primary", function () {
+          box.appendChild(mk("查看" + T("target") + "（仅 " + T("psychic") + "）", "primary", function () {
             psychicViewing = true;
             render();
           }));
         }
       }
     } else if (G.phase === "dial") {
-      hint.innerHTML = "<b>" + t.name + "</b> 全队讨论线索，拖动金色拨杆到猜测位置（<span class='warn'>Psychic 请保持沉默）</span>，然后锁定。";
+      hint.innerHTML = "<b>" + t.name + "</b> 全队讨论" + T("clue") + "，拖动金色" + T("dial") + "到猜测位置（<span class='warn'>" + T("psychic") + " 请保持沉默）</span>，然后锁定。";
       if (control) {
-        var lock = mk("锁定拨杆位置", "primary", function () {
+        var lock = mk("锁定" + T("dial") + "位置", "primary", function () {
           dispatch({ type: "lock" });
         });
         lock.id = "btn-lock";
         box.appendChild(lock);
       }
     } else if (G.phase === "guess") {
-      hint.innerHTML = "<b>" + o.name + "</b> 猜：目标的 <b>中心楔形</b>（4 分处）在拨杆的<b>左边</b>还是<b>右边</b>？";
+      hint.innerHTML = "<b>" + o.name + "</b> 猜：" + T("target") + "的 <b>中心" + T("wedge") + "</b>（4 分处）在" + T("dial") + "的<b>左边</b>还是<b>右边</b>？";
       if (control) {
-        box.appendChild(mk("目标在拨杆左边 ←", "primary", function () {
+        box.appendChild(mk(T("target") + "在" + T("dial") + "左边 ←", "primary", function () {
           dispatch({ type: "guess", guess: "L" });
         }));
-        box.appendChild(mk("目标在拨杆右边 →", "magenta", function () {
+        box.appendChild(mk(T("target") + "在" + T("dial") + "右边 →", "magenta", function () {
           dispatch({ type: "guess", guess: "R" });
         }));
       }
     } else if (G.phase === "reveal") {
-      hint.innerHTML = "<b>" + t.name + "</b> 的 Psychic 揭示目标！";
-      if (control) box.appendChild(mk("揭示目标！", "primary", function () {
+      hint.innerHTML = "<b>" + t.name + "</b> 的 " + T("psychic") + " 揭示" + T("target") + "！";
+      if (control) box.appendChild(mk("揭示" + T("target") + "！", "primary", function () {
         dispatch({ type: "reveal" });
       }));
     } else if (G.phase === "revealed") {
       hint.innerHTML = G.sudden
-        ? "<b>加时赛！</b>平分后继续，直到分出胜负。下一轮由 <b>" + (G.catchup ? t.name : G.teams[WL.other(G.active)].name) + "</b> 行动（换一位新 Psychic）。"
-        : "下一轮由 <b>" + (G.catchup ? t.name : o.name) + "</b> 行动，别忘了换一位新 Psychic 出题。";
+        ? "<b>" + T("suddenDeath") + "！</b>平分后继续，直到分出胜负。下一轮由 <b>" + (G.catchup ? t.name : G.teams[WL.other(G.active)].name) + "</b> 行动（换一位新 " + T("psychic") + "）。"
+        : "下一轮由 <b>" + (G.catchup ? t.name : o.name) + "</b> 行动，别忘了换一位新 " + T("psychic") + " 出题。";
       if (control) box.appendChild(mk("开始下一轮", "primary", function () {
         dispatch({ type: "nextRound" });
       }));
@@ -801,9 +930,9 @@
       var r = G.reveal;
       var txt = "<b class='a' style='color:var(--cA)'>" + t.name + "</b> 获得 <span class='pts" + (r.pts === 4 ? " pts4" : "") + "'>+" + r.pts + "</span> 分";
       if (r.oppPts === 1) {
-        txt += " · <b class='b' style='color:var(--cB)'>" + o.name + "</b> 猜对左右，<span class='pts'>+1</span> 分";
+        txt += " · <b class='b' style='color:var(--cB)'>" + o.name + "</b> 猜对" + T("leftRight") + "，<span class='pts'>+1</span> 分";
       } else if (r.pts === 4) {
-        txt += " · 完美命中！对方无法得分";
+        txt += " · " + T("perfectHit") + "！对方无法得分";
       } else {
         txt += " · <b>" + o.name + "</b> 猜错，不得分";
       }
@@ -816,7 +945,7 @@
     ul.innerHTML = "";
     G.log.forEach(function (e) {
       var li = document.createElement("li");
-      li.innerHTML = "第 " + e.round + " 轮 · <b>" + G.teams[e.team].name + "</b>（拨杆 " + e.dialPct + "%）· 卡片：<b>" +
+      li.innerHTML = "第 " + e.round + " " + T("roundUnit") + " · <b>" + G.teams[e.team].name + "</b>（" + T("dial") + " " + e.dialPct + "%）· 卡片：<b>" +
         e.pair[0] + " — " + e.pair[1] + "</b> · 本队 <b>+" + e.pts + "</b> / 对方 <b>+" + e.oppPts + "</b>";
       ul.appendChild(li);
     });
@@ -1089,6 +1218,18 @@
   $("btn-restart").onclick = function () { dispatch({ type: "newGame" }); };
   $("btn-load-deck").onclick = function () { $("file-deck").click(); };
   $("btn-reset-deck").onclick = resetDeck;
+  $("btn-load-names").onclick = function () { $("file-names").click(); };
+  $("btn-reset-names").onclick = resetNames;
+  $("file-names").addEventListener("change", function () {
+    var f = this.files && this.files[0];
+    if (!f) return;
+    var reader = new FileReader();
+    reader.onload = function () {
+      loadNamesText(String(reader.result));
+    };
+    reader.readAsText(f);
+    this.value = "";
+  });
   $("btn-deck-refresh").onclick = refreshDeckList;
   $("deck-select").addEventListener("change", function () {
     var f = this.value;
@@ -1134,6 +1275,7 @@
   });
 
   render();
+  initNames();
   checkOnline();
 })();
 </script>

@@ -121,12 +121,44 @@ node server.js
 
 部署后访问者打开网址即可玩;本机开发/局域网联机仍用 `node server.js`。
 
+## 自定义文案(游戏名 / 术语)
+
+外置文件 `names.json`(与 `index.html` 同目录)用键值替换游戏名和术语,未填写的键用默认值:
+
+```json
+{
+  "gameName": "Wavelength",
+  "gameTitle": "WAVELENGTH",
+  "gameSubtitle": "心灵波长",
+  "psychic": "Psychic",
+  "dial": "拨杆",
+  "target": "目标",
+  "teamDefaultA": "左脑",
+  "teamDefaultB": "右脑"
+}
+```
+
+联网/静态托管模式下自动加载 `names.json`,改完刷新生效;本地模式可在设置界面「选择文件…」加载并记忆。
+
 ## 测试
 
-测试套件位于临时目录(jsdom + puppeteer-core),覆盖:
+测试套件位于 `tests/` 目录(jsdom + puppeteer-core),首次使用需安装依赖:
 
-- 本地模式完整对局(设置→出题→拨杆→猜左右→揭示→胜负)
-- 服务端 API:意图校验、SSE 广播、题库上传/目录、路径穿越防护
-- 双设备端到端同步:控制器操作 → 监视器实时同步、目标保密、断线重连
-- 认证流程:密码弹窗、错误密码、401 拦截、IP 记忆、持久化
-- 真实浏览器(Chrome headless):全流程 + 断连→重启服务器→自动重连
+```bash
+cd tests
+npm install jsdom puppeteer-core --no-save
+```
+
+运行(全部):
+
+```bash
+node test.js        # 本地模式完整对局 + 题库/文案加载
+node server-test.js # 服务端 API + SSE + 题库
+node online-test.js # 控制器/监视器端到端同步
+node auth-test.js   # 密码认证 + 游客模式
+node static-test.js # 静态托管环境
+node mobile-test.js # 手机视口弹窗滚动
+node browser-test.js# 真实浏览器 + 断线重连
+```
+
+覆盖:本地完整对局、题库上传/目录/路径穿越防护、双设备同步与目标保密、认证/游客流程、静态托管、手机端弹窗滚动、断连→重启→自动重连。

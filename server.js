@@ -5,7 +5,7 @@ var os = require("os");
 var crypto = require("crypto");
 var WL = require("./game.js");
 
-var PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+var PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3100;
 var ROOT = __dirname;
 var CONFIG_PATH = process.env.WL_CONFIG || path.join(ROOT, "config.json");
 var AUTH_IPS_PATH = process.env.WL_AUTH_IPS || path.join(ROOT, "auth-ips.json");
