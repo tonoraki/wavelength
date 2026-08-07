@@ -452,6 +452,7 @@
     <div class="winner" id="winner-text"></div>
     <div class="final-score" id="final-score"></div>
     <button class="btn primary" id="btn-playagain" style="width:100%">再来一局</button>
+    <button class="btn" id="btn-over-close" style="width:100%;margin-top:10px">返回复盘</button>
   </div>
 </div>
 
@@ -466,6 +467,7 @@
   var psychicViewing = false;
   var dragging = false;
   var lastDialSync = 0;
+  var overDismissed = false;
 
   var connState = "local";
   var sse = null;
@@ -976,13 +978,30 @@
     ul.innerHTML = "";
     G.log.forEach(function (e) {
       var li = document.createElement("li");
-      li.innerHTML = "第 " + e.round + " " + T("roundUnit") + " · " + teamName(e.team, G.teams[e.team].name) + "（" + T("dial") + " " + e.dialPct + "%）· 卡片：<b>" +
-        e.pair[0] + " — " + e.pair[1] + "</b> · 本队 <b>+" + e.pts + "</b> / 对方 <b>+" + e.oppPts + "</b>";
+      var items = [
+        { label: T("target"), val: e.targetPct, team: false },
+        { label: T("dial"), val: e.dialPct, team: true }
+      ].sort(function (a, b) { return a.val - b.val; });
+      var labels = items.map(function (it) {
+        return it.team
+          ? "<span style='color:" + teamColor(e.team) + "'>" + it.label + "</span>"
+          : it.label;
+      }).join("-");
+      var vals = items.map(function (it) {
+        return it.team
+          ? "<span style='color:" + teamColor(e.team) + "'>" + it.val + "%</span>"
+          : it.val + "%";
+      }).join("-");
+      var opp = WL.other(e.team);
+      li.innerHTML = "第 " + e.round + " " + T("roundUnit") + " · " + teamName(e.team, G.teams[e.team].name) +
+        "（" + labels + " " + vals + "）· 卡片：<b>" +
+        e.pair[0] + " — " + e.pair[1] + "</b> · 本队 <span style='color:" + teamColor(e.team) + "'>+" + e.pts + "</span> / 对方 <span style='color:" + teamColor(opp) + "'>+" + e.oppPts + "</span>";
       ul.appendChild(li);
     });
   }
 
   function renderModals() {
+    if (G.phase !== "over") overDismissed = false;
     var showSetup = G.phase === "setup" && (ROLE === "controller" || (ROLE === "local" && !ONLINE));
     $("setup-modal").classList.toggle("hidden", !showSetup);
     if (showSetup) {
@@ -994,7 +1013,7 @@
     $("deck-server").style.display = showDeckServer ? "" : "none";
     if (showDeckServer && $("deck-select").options.length <= 1) refreshDeckList();
 
-    var showOver = G.phase === "over" && G.result;
+    var showOver = G.phase === "over" && G.result && !overDismissed;
     $("over-modal").classList.toggle("hidden", !showOver);
     if (showOver) {
       var w = G.teams[G.result.winner];
@@ -1016,8 +1035,12 @@
     return b;
   }
 
+  function teamColor(letter) {
+    return "var(--c" + (letter === "B" ? "B" : "A") + ")";
+  }
+
   function teamName(letter, name) {
-    return "<b style='color:var(--c" + (letter === "B" ? "B" : "A") + ")'>" + name + "</b>";
+    return "<b style='color:" + teamColor(letter) + "'>" + name + "</b>";
   }
 
   function startGame() {
@@ -1263,6 +1286,10 @@
     dispatch({ type: "setWinScore", value: v });
   });
   $("btn-playagain").onclick = function () { dispatch({ type: "newGame" }); };
+  $("btn-over-close").onclick = function () {
+    overDismissed = true;
+    render();
+  };
   $("btn-restart").onclick = function () { dispatch({ type: "newGame" }); };
   $("btn-load-deck").onclick = function () { $("file-deck").click(); };
   $("btn-reset-deck").onclick = resetDeck;

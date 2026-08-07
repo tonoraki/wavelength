@@ -178,6 +178,7 @@
     s.catchup = (pts === 4 && t.score < o.score);
     s.log.unshift({
       round: s.round, team: s.active,
+      targetPct: Math.round(c / UNIT * 100),
       dialPct: Math.round(s.dial / UNIT * 100),
       pair: pair, pts: pts, oppPts: oppPts
     });

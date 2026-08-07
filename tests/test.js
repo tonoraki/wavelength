@@ -117,6 +117,12 @@ async function pickFile(name, content, inputId) {
   const logA = doc.getElementById("log").children[0].innerHTML;
   assert(popA.indexOf("color:var(--cA)") !== -1, "active team name colored in score pop");
   assert(logA.indexOf("color:var(--cA)") !== -1, "team name colored in log");
+  assert(logA.indexOf("目标") !== -1 && logA.indexOf("拨杆") !== -1, "log shows target-dial range");
+  assert(logA.indexOf("%-") !== -1, "log percentages joined with dash");
+  const pcts = logA.match(/\d+%/g).map((s) => parseInt(s, 10));
+  assert(pcts.length === 2 && pcts[0] <= pcts[1], "log percents sorted ascending");
+  assert(logA.indexOf('本队 <span style="color:var(--cA)">+') !== -1, "log own pts in team color");
+  assert(logA.indexOf('对方 <span style="color:var(--cB)">+') !== -1, "log opp pts in other color");
 
   click(doc.getElementById("controls").children[0]);
   assert(doc.getElementById("screen").className.indexOf("open") === -1, "screen reset for new round");
@@ -126,6 +132,27 @@ async function pickFile(name, content, inputId) {
   click("btn-reset-deck");
   assert(doc.getElementById("deck-info").textContent.indexOf("内置题库") !== -1, "reset restores builtin deck");
   assert(doc.getElementById("title-main").textContent === "GUESSY", "custom title persists after deck reset");
+
+  const ws2 = doc.getElementById("opt-winscore");
+  ws2.value = "1";
+  ws2.dispatchEvent(new window.Event("change", { bubbles: true }));
+  doc.getElementById("select-first").value = "A";
+  click("btn-start");
+  click(doc.getElementById("controls").children[0]);
+  click(doc.getElementById("controls").children[0]);
+  const cx = (parseFloat(doc.getElementById("center-mark").style.left) / 100) * 1000;
+  const PE2 = window.PointerEvent || window.MouseEvent;
+  interact.dispatchEvent(new PE2("pointerdown", { clientX: cx, pointerId: 1, bubbles: true }));
+  interact.dispatchEvent(new PE2("pointermove", { clientX: cx, pointerId: 1, bubbles: true }));
+  interact.dispatchEvent(new window.Event("pointerup", { bubbles: true }));
+  click("btn-lock");
+  click(doc.getElementById("controls").children[0]);
+  click(doc.getElementById("controls").children[0]);
+  assert(doc.getElementById("over-modal").className.indexOf("hidden") === -1, "game over modal shown");
+  click("btn-over-close");
+  assert(doc.getElementById("over-modal").className.indexOf("hidden") !== -1, "返回复盘 dismisses modal");
+  assert(doc.getElementById("log").children.length >= 1, "board keeps log after 返回复盘");
+  assert(doc.getElementById("scoreA").textContent === "4", "final score visible on board");
 
   console.log("ALL TESTS PASSED");
   process.exit(0);
