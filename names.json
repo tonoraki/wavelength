@@ -17,5 +17,6 @@
   "teamDefaultB": "右脑",
   "restartBtn": "重新开始",
   "playagainBtn": "再来一局",
-  "startBtn": "开始游戏"
+  "startBtn": "开始游戏",
+  "skipBtn": "跳过此题"
 }

@@ -252,6 +252,13 @@
   details.deck-help summary { cursor: pointer; color: var(--dim); }
   details.deck-help p { margin: 6px 0 0 14px; line-height: 1.7; color: var(--dim); }
   details.deck-help b { color: var(--txt); }
+  details.advanced {
+    background: var(--panel2); border: 1px solid var(--line); border-radius: 12px;
+    padding: 12px 16px; margin-bottom: 14px; text-align: left;
+  }
+  details.advanced > summary { cursor: pointer; color: var(--gold); font-weight: 700; margin-bottom: 8px; }
+  .check-row { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--txt); cursor: pointer; padding: 8px 0; }
+  .check-row input { width: auto; }
   .winner { font-size: 30px; font-weight: 800; margin-bottom: 6px; }
   .winner.a { color: var(--cA); } .winner.b { color: var(--cB); }
   .final-score { color: var(--dim); margin-bottom: 20px; }
@@ -381,45 +388,58 @@
         <option value="R" selected>随机</option>
       </select>
     </div>
-    <div class="field" id="deck-server" style="display:none">
-      <label>服务器题库（服务器 decks/ 文件夹）</label>
-      <div class="deck-row">
-        <select id="deck-select">
-          <option value="">— 选择题库 —</option>
-        </select>
-        <button type="button" class="btn" id="btn-deck-refresh">刷新</button>
+    <details class="advanced">
+      <summary>⚙ 高级选项</summary>
+      <div class="field" id="deck-server" style="display:none">
+        <label>服务器题库（服务器 decks/ 文件夹）</label>
+        <div class="deck-row">
+          <select id="deck-select">
+            <option value="">— 选择题库 —</option>
+          </select>
+          <button type="button" class="btn" id="btn-deck-refresh">刷新</button>
+        </div>
       </div>
-    </div>
-    <div class="field">
-      <label>题库</label>
-      <div class="deck-row">
-        <span class="deck-info" id="deck-info"></span>
-        <button type="button" class="btn" id="btn-load-deck">选择文件…</button>
-        <button type="button" class="btn" id="btn-reset-deck">恢复默认</button>
+      <div class="field">
+        <label>题库</label>
+        <div class="deck-row">
+          <span class="deck-info" id="deck-info"></span>
+          <button type="button" class="btn" id="btn-load-deck">选择文件…</button>
+          <button type="button" class="btn" id="btn-reset-deck">恢复默认</button>
+        </div>
+        <div class="deck-msg" id="deck-msg"></div>
+        <details class="deck-help">
+          <summary>题库文件格式（JSON / YAML）</summary>
+          <p><b>联网模式</b>：把题库文件放进服务器目录的 <b>decks/</b> 文件夹，控制器端下拉选择即可（改动后点「刷新」）。</p>
+          <p><b>JSON</b>（如 cards.json）：{"name": "题库名", "cards": [["左", "右"], ["左1", "右1", "左2", "右2"]]}，name 可省略。</p>
+          <p><b>YAML</b>（.yaml / .yml）：每行一张卡 <b>- [左, 右]</b>；双面卡写 4 个概念 <b>- [左1, 右1, 左2, 右2]</b>；<b>#</b> 开头为注释。</p>
+          <p>2 个概念 = 单面卡；4 个概念 = 双面卡（Psychic 可选一面）。概念文字中请勿使用逗号。</p>
+        </details>
       </div>
-      <div class="deck-msg" id="deck-msg"></div>
-      <details class="deck-help">
-        <summary>题库文件格式（JSON / YAML）</summary>
-        <p><b>联网模式</b>：把题库文件放进服务器目录的 <b>decks/</b> 文件夹，控制器端下拉选择即可（改动后点「刷新」）。</p>
-        <p><b>JSON</b>（如 cards.json）：{"name": "题库名", "cards": [["左", "右"], ["左1", "右1", "左2", "右2"]]}，name 可省略。</p>
-        <p><b>YAML</b>（.yaml / .yml）：每行一张卡 <b>- [左, 右]</b>；双面卡写 4 个概念 <b>- [左1, 右1, 左2, 右2]</b>；<b>#</b> 开头为注释。</p>
-        <p>2 个概念 = 单面卡；4 个概念 = 双面卡（Psychic 可选一面）。概念文字中请勿使用逗号。</p>
-      </details>
-    </div>
-    <div class="field">
-      <label>文案（游戏名 / 术语）</label>
-      <div class="deck-row">
-        <span class="deck-info" id="names-info"></span>
-        <button type="button" class="btn" id="btn-load-names">选择文件…</button>
-        <button type="button" class="btn" id="btn-reset-names">恢复默认</button>
+      <div class="field">
+        <label>文案（游戏名 / 术语）</label>
+        <div class="deck-row">
+          <span class="deck-info" id="names-info"></span>
+          <button type="button" class="btn" id="btn-load-names">选择文件…</button>
+          <button type="button" class="btn" id="btn-reset-names">恢复默认</button>
+        </div>
+        <div class="deck-msg" id="names-msg"></div>
+        <details class="deck-help">
+          <summary>文案文件格式</summary>
+          <p><b>JSON</b>（如 names.json）：键值对象，键可省略，省略的键用默认值。常用键：gameName / gameTitle / gameSubtitle / psychic（出题人）/ dial（拨杆）/ target（目标）/ teamDefaultA / teamDefaultB。</p>
+          <p>联网模式下服务器自动加载服务器目录下的 <b>names.json</b>，改完刷新即可生效。</p>
+        </details>
       </div>
-      <div class="deck-msg" id="names-msg"></div>
-      <details class="deck-help">
-        <summary>文案文件格式</summary>
-        <p><b>JSON</b>（如 names.json）：键值对象，键可省略，省略的键用默认值。常用键：gameName / gameTitle / gameSubtitle / psychic（出题人）/ dial（拨杆）/ target（目标）/ teamDefaultA / teamDefaultB。</p>
-        <p>联网模式下服务器自动加载服务器目录下的 <b>names.json</b>，改完刷新即可生效。</p>
-      </details>
-    </div>
+      <div class="field-row">
+        <div class="field">
+          <label>出卡方式</label>
+          <label class="check-row"><input type="checkbox" id="opt-ordered"> 按顺序展示（不洗牌，抽完循环）</label>
+        </div>
+        <div class="field">
+          <label>获胜分数（0 = 无上限）</label>
+          <input type="number" id="opt-winscore" min="0" max="999" value="10">
+        </div>
+      </div>
+    </details>
     <button class="btn primary" id="btn-start" style="width:100%">开始游戏</button>
   </div>
 </div>
@@ -477,7 +497,8 @@
     teamDefaultB: "右脑",
     restartBtn: "重新开始",
     playagainBtn: "再来一局",
-    startBtn: "开始游戏"
+    startBtn: "开始游戏",
+    skipBtn: "跳过此题"
   };
   var NAMES = null;
 
@@ -770,10 +791,16 @@
     var el = $(id);
     el.innerHTML = "";
     el.className = "score-track " + cls;
-    for (var i = 0; i < WL.WIN_SCORE; i++) {
+    var limit = G.winScore > 0 ? Math.min(G.winScore, 40) : 30;
+    for (var i = 0; i < limit; i++) {
       var d = document.createElement("i");
       if (i < score) d.className = "on";
       el.appendChild(d);
+    }
+    if (G.winScore === 0) {
+      var inf = document.createElement("span");
+      inf.textContent = "∞";
+      el.appendChild(inf);
     }
   }
 
@@ -889,6 +916,10 @@
             render();
           }));
         }
+        box.appendChild(mk(T("skipBtn"), "", function () {
+          psychicViewing = false;
+          dispatch({ type: "skipCard" });
+        }));
       }
     } else if (G.phase === "dial") {
       hint.innerHTML = "<b>" + t.name + "</b> 全队讨论" + T("clue") + "，拖动金色" + T("dial") + "到猜测位置（<span class='warn'>" + T("psychic") + " 请保持沉默）</span>，然后锁定。";
@@ -954,6 +985,10 @@
   function renderModals() {
     var showSetup = G.phase === "setup" && (ROLE === "controller" || (ROLE === "local" && !ONLINE));
     $("setup-modal").classList.toggle("hidden", !showSetup);
+    if (showSetup) {
+      $("opt-ordered").checked = !!G.ordered;
+      $("opt-winscore").value = G.winScore;
+    }
 
     var showDeckServer = ONLINE && ROLE === "controller";
     $("deck-server").style.display = showDeckServer ? "" : "none";
@@ -1214,6 +1249,15 @@
   });
 
   $("btn-start").onclick = startGame;
+  $("opt-ordered").addEventListener("change", function () {
+    dispatch({ type: "setOrdered", value: this.checked });
+  });
+  $("opt-winscore").addEventListener("change", function () {
+    var v = Math.floor(Number(this.value));
+    if (isNaN(v) || v < 0) v = 0;
+    this.value = v;
+    dispatch({ type: "setWinScore", value: v });
+  });
   $("btn-playagain").onclick = function () { dispatch({ type: "newGame" }); };
   $("btn-restart").onclick = function () { dispatch({ type: "newGame" }); };
   $("btn-load-deck").onclick = function () { $("file-deck").click(); };

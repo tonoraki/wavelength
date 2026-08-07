@@ -33,7 +33,8 @@ function assert(cond, msg) {
   await page.goto(base + "/", { waitUntil: "domcontentloaded", timeout: 20000 });
   await page.waitForSelector("#setup-modal:not(.hidden)", { timeout: 5000 });
   assert(await page.$eval("#conn-badge", (el) => el.textContent.indexOf("本地模式") !== -1), "static host: badge shows local mode");
-  assert(await page.$eval("#deck-info", (el) => el.textContent.indexOf("精选光谱卡") !== -1), "static host: cards.json deck loaded");
+  await page.waitForFunction(() => document.getElementById("deck-info").textContent.indexOf("车万版") !== -1, { timeout: 5000 });
+  console.log("ok: static host: cards.json deck loaded");
 
   await page.$eval("#select-first", (el) => { el.value = "A"; });
   await page.click("#btn-start");

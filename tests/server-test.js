@@ -86,6 +86,24 @@ function latestSnapshot() {
   s = latestSnapshot();
   assert(s.phase === "psychic" && s.active === "B" && s.round === 2, "next round switched to B");
 
+  const beforeSkip = latestSnapshot().card;
+  await req("POST", base + "/api/intent", { type: "skipCard" });
+  await sleep(100);
+  s = latestSnapshot();
+  assert(s.phase === "psychic" && s.round === 2, "skip stays in psychic, round unchanged");
+  assert(JSON.stringify(s.card) !== JSON.stringify(beforeSkip), "skip draws a different card");
+
+  await req("POST", base + "/api/intent", { type: "setOrdered", value: true });
+  await req("POST", base + "/api/intent", { type: "setWinScore", value: 0 });
+  await sleep(100);
+  s = latestSnapshot();
+  assert(s.ordered === true, "ordered flag synced");
+  assert(s.winScore === 0, "win score 0 (unlimited) synced");
+
+  await req("POST", base + "/api/intent", { type: "setWinScore", value: -5 });
+  await sleep(100);
+  assert(latestSnapshot().winScore === 0, "negative win score coerced to 0");
+
   r = await req("POST", base + "/api/deck", { name: "mydeck", text: "- [甲, 乙]\n- [丙, 丁, 戊, 己]\n" });
   j = JSON.parse(r.body);
   assert(r.status === 200 && j.cards === 2, "deck uploaded via API");

@@ -59,6 +59,15 @@ async function pickFile(name, content, inputId) {
   await pickFile("bad.yaml", "hello world\n");
   assert(doc.getElementById("deck-msg").className.indexOf("err") !== -1, "bad YAML shows error");
 
+  doc.getElementById("opt-ordered").checked = true;
+  doc.getElementById("opt-ordered").dispatchEvent(new window.Event("change", { bubbles: true }));
+  const wsInput = doc.getElementById("opt-winscore");
+  wsInput.value = "3";
+  wsInput.dispatchEvent(new window.Event("change", { bubbles: true }));
+  assert(wsInput.value === "3", "win score setting applied");
+  wsInput.value = "100";
+  wsInput.dispatchEvent(new window.Event("change", { bubbles: true }));
+
   doc.getElementById("input-nameA").value = "蓝队";
   doc.getElementById("input-nameB").value = "粉队";
   doc.getElementById("select-first").value = "A";
@@ -71,6 +80,13 @@ async function pickFile(name, content, inputId) {
 
   const sides = doc.getElementById("sides").children;
   assert(sides.length >= 1 && sides.length <= 2, "card rendered");
+  assert(doc.getElementById("trackA").children.length === 40, "win score 100 caps score dots at 40");
+
+  const skipBtn = Array.from(doc.getElementById("controls").children).find((b) => b.textContent.indexOf("跳过此题") !== -1);
+  assert(!!skipBtn, "skip button present in psychic phase");
+  click(skipBtn);
+  assert(doc.getElementById("hint").textContent.indexOf("查看目标") !== -1, "still psychic phase after skip");
+  assert(doc.getElementById("card-label").textContent.indexOf("第 1 轮") !== -1, "round unchanged after skip");
 
   click(doc.getElementById("controls").children[0]);
   assert(doc.getElementById("screen").className.indexOf("open") !== -1, "screen opened for psychic");

@@ -14,6 +14,11 @@ function assert(cond, msg) {
   await page.goto("file://" + path.join(ROOT, "index.html"), { waitUntil: "load", timeout: 20000 });
   await new Promise((r) => setTimeout(r, 600));
 
+  await page.evaluate(() => {
+    document.querySelector("details.advanced").open = true;
+  });
+  await new Promise((r) => setTimeout(r, 200));
+
   const before = await page.evaluate(() => {
     const mask = document.getElementById("setup-modal");
     const modal = mask.querySelector(".modal");

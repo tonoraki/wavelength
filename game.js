@@ -79,7 +79,9 @@
   }
 
   function drawFromDeck(s) {
-    if (s.deck.length === 0) s.deck = shuffle(s.cards.slice());
+    if (s.deck.length === 0) {
+      s.deck = s.ordered ? s.cards.slice() : shuffle(s.cards.slice());
+    }
     return s.deck.pop();
   }
 
@@ -98,6 +100,8 @@
       cards: BUILTIN_DECK.slice(),
       deckName: DECK_NAME_DEFAULT,
       deck: [],
+      ordered: false,
+      winScore: WIN_SCORE,
       sudden: false,
       catchup: false,
       result: null,
@@ -178,8 +182,9 @@
       pair: pair, pts: pts, oppPts: oppPts
     });
 
-    var aWon = s.teams.A.score >= WIN_SCORE;
-    var bWon = s.teams.B.score >= WIN_SCORE;
+    var limit = s.winScore > 0 ? s.winScore : Infinity;
+    var aWon = s.teams.A.score >= limit;
+    var bWon = s.teams.B.score >= limit;
     if (aWon || bWon) {
       if (s.teams.A.score === s.teams.B.score) {
         s.sudden = true;
@@ -244,6 +249,23 @@
         s.cards = BUILTIN_DECK.slice();
         s.deckName = DECK_NAME_DEFAULT;
         s.deck = [];
+        break;
+      case "skipCard":
+        if (s.phase === "psychic") {
+          s.card = drawFromDeck(s);
+          s.side = 0;
+          s.target = newTarget();
+          s.dial = UNIT / 2;
+          s.guess = null;
+        }
+        break;
+      case "setOrdered":
+        s.ordered = !!intent.value;
+        break;
+      case "setWinScore":
+        var ws = Math.floor(Number(intent.value));
+        if (isNaN(ws) || ws < 0) ws = 0;
+        s.winScore = ws;
         break;
     }
     return s;
