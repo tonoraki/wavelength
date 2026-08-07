@@ -113,6 +113,10 @@ async function pickFile(name, content, inputId) {
   assert(parseInt(doc.getElementById("scoreA").textContent, 10) >= a0, "A score updated after reveal");
   assert(doc.getElementById("screen").className.indexOf("open") !== -1, "screen open after reveal");
   assert(doc.getElementById("log").children.length === 1, "round logged");
+  const popA = doc.getElementById("score-pop").innerHTML;
+  const logA = doc.getElementById("log").children[0].innerHTML;
+  assert(popA.indexOf("color:var(--cA)") !== -1, "active team name colored in score pop");
+  assert(logA.indexOf("color:var(--cA)") !== -1, "team name colored in log");
 
   click(doc.getElementById("controls").children[0]);
   assert(doc.getElementById("screen").className.indexOf("open") === -1, "screen reset for new round");

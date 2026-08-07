@@ -903,7 +903,7 @@
         : "填写队伍信息并点击「" + T("startBtn") + "」。";
       if (control) box.appendChild(mk(T("startBtn"), "primary", startGame));
     } else if (G.phase === "psychic") {
-      hint.innerHTML = "<b>" + t.name + "</b> 的 " + T("psychic") + " 步骤：选好卡片面 → 点击「查看" + T("target") + "」（<span class='warn'>请确保其他人没有偷看屏幕！</span>）→ 口述" + T("clue") + " → 关闭" + T("screen") + "，之后不能再说话。";
+      hint.innerHTML = teamName(G.active, t.name) + " 的 " + T("psychic") + " 步骤：选好卡片面 → 点击「查看" + T("target") + "」（<span class='warn'>请确保其他人没有偷看屏幕！</span>）→ 口述" + T("clue") + " → 关闭" + T("screen") + "，之后不能再说话。";
       if (control) {
         if (psychicViewing) {
           box.appendChild(mk("我记住了，关闭" + T("screen"), "magenta", function () {
@@ -922,7 +922,7 @@
         }));
       }
     } else if (G.phase === "dial") {
-      hint.innerHTML = "<b>" + t.name + "</b> 全队讨论" + T("clue") + "，拖动金色" + T("dial") + "到猜测位置（<span class='warn'>" + T("psychic") + " 请保持沉默）</span>，然后锁定。";
+      hint.innerHTML = teamName(G.active, t.name) + " 全队讨论" + T("clue") + "，拖动金色" + T("dial") + "到猜测位置（<span class='warn'>" + T("psychic") + " 请保持沉默）</span>，然后锁定。";
       if (control) {
         var lock = mk("锁定" + T("dial") + "位置", "primary", function () {
           dispatch({ type: "lock" });
@@ -931,7 +931,7 @@
         box.appendChild(lock);
       }
     } else if (G.phase === "guess") {
-      hint.innerHTML = "<b>" + o.name + "</b> 猜：" + T("target") + "的 <b>中心" + T("wedge") + "</b>（4 分处）在" + T("dial") + "的<b>左边</b>还是<b>右边</b>？";
+      hint.innerHTML = teamName(WL.other(G.active), o.name) + " 猜：" + T("target") + "的 <b>中心" + T("wedge") + "</b>（4 分处）在" + T("dial") + "的<b>左边</b>还是<b>右边</b>？";
       if (control) {
         box.appendChild(mk(T("target") + "在" + T("dial") + "左边 ←", "primary", function () {
           dispatch({ type: "guess", guess: "L" });
@@ -941,14 +941,14 @@
         }));
       }
     } else if (G.phase === "reveal") {
-      hint.innerHTML = "<b>" + t.name + "</b> 的 " + T("psychic") + " 揭示" + T("target") + "！";
+      hint.innerHTML = teamName(G.active, t.name) + " 的 " + T("psychic") + " 揭示" + T("target") + "！";
       if (control) box.appendChild(mk("揭示" + T("target") + "！", "primary", function () {
         dispatch({ type: "reveal" });
       }));
     } else if (G.phase === "revealed") {
       hint.innerHTML = G.sudden
-        ? "<b>" + T("suddenDeath") + "！</b>平分后继续，直到分出胜负。下一轮由 <b>" + (G.catchup ? t.name : G.teams[WL.other(G.active)].name) + "</b> 行动（换一位新 " + T("psychic") + "）。"
-        : "下一轮由 <b>" + (G.catchup ? t.name : o.name) + "</b> 行动，别忘了换一位新 " + T("psychic") + " 出题。";
+        ? "<b>" + T("suddenDeath") + "！</b>平分后继续，直到分出胜负。下一轮由 " + (G.catchup ? teamName(G.active, t.name) : teamName(WL.other(G.active), G.teams[WL.other(G.active)].name)) + " 行动（换一位新 " + T("psychic") + "）。"
+        : "下一轮由 " + (G.catchup ? teamName(G.active, t.name) : teamName(WL.other(G.active), o.name)) + " 行动，别忘了换一位新 " + T("psychic") + " 出题。";
       if (control) box.appendChild(mk("开始下一轮", "primary", function () {
         dispatch({ type: "nextRound" });
       }));
@@ -959,13 +959,13 @@
     var pop = $("score-pop");
     if (G.reveal && (G.phase === "revealed" || G.phase === "over")) {
       var r = G.reveal;
-      var txt = "<b class='a' style='color:var(--cA)'>" + t.name + "</b> 获得 <span class='pts" + (r.pts === 4 ? " pts4" : "") + "'>+" + r.pts + "</span> 分";
+      var txt = teamName(G.active, t.name) + " 获得 <span class='pts" + (r.pts === 4 ? " pts4" : "") + "'>+" + r.pts + "</span> 分";
       if (r.oppPts === 1) {
-        txt += " · <b class='b' style='color:var(--cB)'>" + o.name + "</b> 猜对" + T("leftRight") + "，<span class='pts'>+1</span> 分";
+        txt += " · " + teamName(WL.other(G.active), o.name) + " 猜对" + T("leftRight") + "，<span class='pts'>+1</span> 分";
       } else if (r.pts === 4) {
         txt += " · " + T("perfectHit") + "！对方无法得分";
       } else {
-        txt += " · <b>" + o.name + "</b> 猜错，不得分";
+        txt += " · " + teamName(WL.other(G.active), o.name) + " 猜错，不得分";
       }
       pop.innerHTML = txt;
     } else {
@@ -976,7 +976,7 @@
     ul.innerHTML = "";
     G.log.forEach(function (e) {
       var li = document.createElement("li");
-      li.innerHTML = "第 " + e.round + " " + T("roundUnit") + " · <b>" + G.teams[e.team].name + "</b>（" + T("dial") + " " + e.dialPct + "%）· 卡片：<b>" +
+      li.innerHTML = "第 " + e.round + " " + T("roundUnit") + " · " + teamName(e.team, G.teams[e.team].name) + "（" + T("dial") + " " + e.dialPct + "%）· 卡片：<b>" +
         e.pair[0] + " — " + e.pair[1] + "</b> · 本队 <b>+" + e.pts + "</b> / 对方 <b>+" + e.oppPts + "</b>";
       ul.appendChild(li);
     });
@@ -1014,6 +1014,10 @@
     b.textContent = text;
     b.onclick = fn;
     return b;
+  }
+
+  function teamName(letter, name) {
+    return "<b style='color:var(--c" + (letter === "B" ? "B" : "A") + ")'>" + name + "</b>";
   }
 
   function startGame() {
