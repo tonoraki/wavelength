@@ -4,7 +4,7 @@ const path = require("path");
 const puppeteer = require(path.join(__dirname, "node_modules", "puppeteer-core"));
 
 const ROOT = path.join(__dirname, "..");
-const MIME = { ".html": "text/html; charset=utf-8", ".js": "application/javascript; charset=utf-8", ".json": "application/json; charset=utf-8" };
+const MIME = { ".html": "text/html; charset=utf-8", ".js": "application/javascript; charset=utf-8", ".json": "application/json; charset=utf-8", ".yaml": "text/plain; charset=utf-8" };
 const CHROME = "/usr/bin/google-chrome";
 
 function assert(cond, msg) {
@@ -34,7 +34,7 @@ function assert(cond, msg) {
   await page.waitForSelector("#setup-modal:not(.hidden)", { timeout: 5000 });
   assert(await page.$eval("#conn-badge", (el) => el.textContent.indexOf("本地模式") !== -1), "static host: badge shows local mode");
   await page.waitForFunction(() => document.getElementById("deck-info").textContent.indexOf("车万版") !== -1, { timeout: 5000 });
-  console.log("ok: static host: cards.json deck loaded");
+  console.log("ok: static host: cards.yaml deck loaded");
 
   await page.$eval("#select-first", (el) => { el.value = "A"; });
   await page.click("#btn-start");

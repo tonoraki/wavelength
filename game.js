@@ -306,12 +306,18 @@
 
   function parseYamlCards(text) {
     var out = [];
+    var name = "";
     var lines = text.split(/\r?\n/);
     for (var i = 0; i < lines.length; i++) {
       var m = lines[i].match(/^\s*-\s*\[(.*?)\]\s*(?:#.*)?$/);
       if (!m) {
+        var nm = lines[i].match(/^\s*name\s*:\s*(.*?)\s*$/);
+        if (nm) {
+          name = nm[1].replace(/^["']|["']$/g, "").trim();
+          continue;
+        }
         var s = lines[i].replace(/#.*$/, "").trim();
-        if (!s) continue;
+        if (!s || s === "cards:" || s === "cards") continue;
         throw new Error("第 " + (i + 1) + " 行格式错误，应为：- [左, 右]");
       }
       var items = m[1].split(",").map(function (x) {
@@ -321,7 +327,7 @@
       else if (items.length === 4) out.push([items[0], items[1], items[2], items[3]]);
       else throw new Error("第 " + (i + 1) + " 行应有 2 或 4 个概念");
     }
-    return out;
+    return { cards: out, name: name };
   }
 
   function parseDeck(text) {

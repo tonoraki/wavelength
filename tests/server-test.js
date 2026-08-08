@@ -117,7 +117,7 @@ function latestSnapshot() {
   r = await req("POST", base + "/api/deck/load", { file: folderDeck.file });
   j = JSON.parse(r.body);
   assert(r.status === 200 && j.cards === folderDeck.cards, "folder deck loaded by name");
-  r = await req("POST", base + "/api/deck/load", { file: "../cards.json" });
+  r = await req("POST", base + "/api/deck/load", { file: "../cards.yaml" });
   assert(r.status === 400, "path traversal rejected");
 
   streamReq.destroy();

@@ -85,12 +85,23 @@ function listDecks() {
   return out;
 }
 
+var deckFile = null;
 try {
-  var deckFile = fs.readFileSync(path.join(ROOT, "cards.json"), "utf8");
-  var parsed = WL.parseDeck(deckFile);
-  WL.applyIntent(state, { type: "loadDeck", name: parsed.name || "cards.json", cards: parsed.cards });
+  deckFile = fs.readFileSync(path.join(ROOT, "cards.yaml"), "utf8");
 } catch (e) {
-  console.log("未找到 cards.json（" + e.message + "），使用内置题库");
+  try {
+    deckFile = fs.readFileSync(path.join(ROOT, "cards.json"), "utf8");
+  } catch (e2) {}
+}
+if (deckFile) {
+  try {
+    var parsed = WL.parseDeck(deckFile);
+    WL.applyIntent(state, { type: "loadDeck", name: parsed.name || "cards", cards: parsed.cards });
+  } catch (e) {
+    console.log("默认题库解析失败：" + e.message);
+  }
+} else {
+  console.log("未找到 cards.yaml / cards.json，使用内置题库");
 }
 
 function broadcast() {

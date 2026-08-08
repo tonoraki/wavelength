@@ -412,7 +412,7 @@
           <summary>题库文件格式（JSON / YAML）</summary>
           <p><b>联网模式</b>：把题库文件放进服务器目录的 <b>decks/</b> 文件夹，控制器端下拉选择即可（改动后点「刷新」）。</p>
           <p><b>JSON</b>（如 cards.json）：{"name": "题库名", "cards": [["左", "右"], ["左1", "右1", "左2", "右2"]]}，name 可省略。</p>
-          <p><b>YAML</b>（.yaml / .yml）：每行一张卡 <b>- [左, 右]</b>；双面卡写 4 个概念 <b>- [左1, 右1, 左2, 右2]</b>；<b>#</b> 开头为注释。</p>
+          <p><b>YAML</b>（默认 <b>cards.yaml</b>）：首行可选 name: 题库名，然后 cards: 后每行一张 <b>- [左, 右]</b>；双面卡写 4 个概念 <b>- [左1, 右1, 左2, 右2]</b>；<b>#</b> 开头为注释。</p>
           <p>2 个概念 = 单面卡；4 个概念 = 双面卡（Psychic 可选一面）。概念文字中请勿使用逗号。</p>
         </details>
       </div>
@@ -1124,7 +1124,7 @@
     try { localStorage.removeItem("wl_deck"); } catch (e) {}
     dispatch({ type: "resetDeck" });
     deckMsg("已恢复默认题库（" + G.cards.length + " 张卡）", true);
-    tryFetch("cards.json");
+    tryFetch("cards.yaml");
   }
 
   function tryFetch(url) {
@@ -1137,7 +1137,7 @@
       dispatch({ type: "loadDeck", name: parsed.name || url.replace(/\.(json|ya?ml)$/i, ""), cards: parsed.cards });
       deckMsg("已加载题库：" + G.deckName + "（" + G.cards.length + " 张卡）", true);
     }).catch(function () {
-      if (url === "cards.json") tryFetch("cards.yaml");
+      if (url === "cards.yaml") tryFetch("cards.json");
     });
   }
 
@@ -1159,7 +1159,7 @@
         try { localStorage.removeItem("wl_deck"); } catch (e2) {}
       }
     }
-    tryFetch("cards.json");
+    tryFetch("cards.yaml");
   }
 
   function checkOnline() {
