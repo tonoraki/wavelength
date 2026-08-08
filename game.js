@@ -103,6 +103,8 @@
       ordered: false,
       winScore: WIN_SCORE,
       sudden: false,
+      sdPts: { A: 0, B: 0 },
+      sdTurns: { A: false, B: false },
       catchup: false,
       result: null,
       reveal: null,
@@ -131,6 +133,8 @@
     s.active = s.first;
     s.round = 0;
     s.sudden = false;
+    s.sdPts = { A: 0, B: 0 };
+    s.sdTurns = { A: false, B: false };
     s.catchup = false;
     s.result = null;
     s.reveal = null;
@@ -147,6 +151,8 @@
     }
     s.round = 0;
     s.sudden = false;
+    s.sdPts = { A: 0, B: 0 };
+    s.sdTurns = { A: false, B: false };
     s.catchup = false;
     s.result = null;
     s.reveal = null;
@@ -170,18 +176,40 @@
       if (s.guess === oppCorrect) oppPts = 1;
     }
 
-    t.score += pts;
-    o.score += oppPts;
-
     var pair = cardSides(s.card)[s.side];
     s.reveal = { pts: pts, oppPts: oppPts, oppCorrect: oppCorrect, guess: s.guess, pair: pair };
-    s.catchup = (pts === 4 && t.score < o.score);
+    s.catchup = false;
     s.log.unshift({
       round: s.round, team: s.active,
       targetPct: Math.round(c / UNIT * 100),
       dialPct: Math.round(s.dial / UNIT * 100),
-      pair: pair, pts: pts, oppPts: oppPts
+      pair: pair, pts: pts, oppPts: oppPts,
+      sudden: s.sudden
     });
+
+    if (s.sudden) {
+      s.sdPts[s.active] += pts;
+      s.sdPts[other(s.active)] += oppPts;
+      s.sdTurns[s.active] = true;
+      if (s.sdTurns.A && s.sdTurns.B) {
+        if (s.sdPts.A === s.sdPts.B) {
+          s.sdPts.A = 0;
+          s.sdPts.B = 0;
+          s.sdTurns.A = false;
+          s.sdTurns.B = false;
+        } else {
+          s.result = { winner: s.sdPts.A > s.sdPts.B ? "A" : "B", sudden: true };
+          s.phase = "over";
+          return;
+        }
+      }
+      s.phase = "revealed";
+      return;
+    }
+
+    t.score += pts;
+    o.score += oppPts;
+    s.catchup = (pts === 4 && t.score < o.score);
 
     var limit = s.winScore > 0 ? s.winScore : Infinity;
     var aWon = s.teams.A.score >= limit;
@@ -189,6 +217,10 @@
     if (aWon || bWon) {
       if (s.teams.A.score === s.teams.B.score) {
         s.sudden = true;
+        s.sdPts.A = 0;
+        s.sdPts.B = 0;
+        s.sdTurns.A = false;
+        s.sdTurns.B = false;
         s.phase = "revealed";
       } else {
         s.result = { winner: s.teams.A.score > s.teams.B.score ? "A" : "B" };

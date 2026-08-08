@@ -154,6 +154,56 @@ async function pickFile(name, content, inputId) {
   assert(doc.getElementById("log").children.length >= 1, "board keeps log after 返回复盘");
   assert(doc.getElementById("scoreA").textContent === "4", "final score visible on board");
 
+  click("btn-restart");
+  const ws3 = doc.getElementById("opt-winscore");
+  ws3.value = "2";
+  ws3.dispatchEvent(new window.Event("change", { bubbles: true }));
+  doc.getElementById("select-first").value = "A";
+  click("btn-start");
+
+  const centerOf = () => (parseFloat(doc.getElementById("center-mark").style.left) / 100) * 1000;
+  const dragTo = (x) => {
+    interact.dispatchEvent(new PE2("pointerdown", { clientX: x, pointerId: 1, bubbles: true }));
+    interact.dispatchEvent(new PE2("pointermove", { clientX: x, pointerId: 1, bubbles: true }));
+    interact.dispatchEvent(new window.Event("pointerup", { bubbles: true }));
+  };
+  const psychicPass = () => {
+    click(doc.getElementById("controls").children[0]);
+    click(doc.getElementById("controls").children[0]);
+  };
+  const guessCorrect = () => {
+    const c = (parseFloat(doc.getElementById("center-mark").style.left) / 100) * 1000;
+    const d = parseFloat(doc.getElementById("dial").style.left) / 100 * 1000;
+    click(doc.getElementById("controls").children[d < c ? 1 : 0]);
+  };
+  const reveal = () => click(doc.getElementById("controls").children[0]);
+
+  psychicPass();
+  dragTo(centerOf() + 100);
+  click("btn-lock");
+  guessCorrect();
+  reveal();
+  assert(doc.getElementById("over-modal").className.indexOf("hidden") !== -1, "tie does not end game immediately");
+  assert(doc.getElementById("scoreA").textContent === "2" && doc.getElementById("scoreB").textContent === "2", "both reach win score -> tie 2:2");
+  assert(doc.getElementById("hint").textContent.indexOf("加时赛") !== -1, "hint announces sudden death");
+
+  click(doc.getElementById("controls").children[0]);
+  psychicPass();
+  dragTo(0);
+  click("btn-lock");
+  guessCorrect();
+  reveal();
+  assert(doc.getElementById("over-modal").className.indexOf("hidden") !== -1, "first sudden-death turn alone does not decide");
+
+  click(doc.getElementById("controls").children[0]);
+  psychicPass();
+  dragTo(centerOf() + 100);
+  click("btn-lock");
+  guessCorrect();
+  reveal();
+  assert(doc.getElementById("over-modal").className.indexOf("hidden") === -1, "sudden death decided after both teams' turns");
+  assert(doc.getElementById("winner-text").textContent.indexOf("蓝队") !== -1, "higher sudden-death round score wins");
+
   console.log("ALL TESTS PASSED");
   process.exit(0);
 })().catch((e) => { console.error(e); process.exit(1); });
