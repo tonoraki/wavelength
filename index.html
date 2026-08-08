@@ -440,6 +440,15 @@
           <input type="number" id="opt-winscore" min="0" max="999" value="10">
         </div>
       </div>
+      <div class="field">
+        <label>目标分布（两端/中心/中段 频率）</label>
+        <select id="opt-dist">
+          <option value="uniform">均匀</option>
+          <option value="mild">适中（两端 1.3× / 中段 0.85）</option>
+          <option value="recommended" selected>推荐（两端 1.5× / 中段 0.75）</option>
+          <option value="strong">明显（两端 1.7× / 中段 0.65）</option>
+        </select>
+      </div>
     </details>
     <button class="btn primary" id="btn-start" style="width:100%">开始游戏</button>
   </div>
@@ -1008,6 +1017,7 @@
     if (showSetup) {
       $("opt-ordered").checked = !!G.ordered;
       $("opt-winscore").value = G.winScore;
+      $("opt-dist").value = G.dist || WL.DIST_DEFAULT;
     }
 
     var showDeckServer = ONLINE && ROLE === "controller";
@@ -1285,6 +1295,9 @@
     if (isNaN(v) || v < 0) v = 0;
     this.value = v;
     dispatch({ type: "setWinScore", value: v });
+  });
+  $("opt-dist").addEventListener("change", function () {
+    dispatch({ type: "setDist", value: this.value });
   });
   $("btn-playagain").onclick = function () { dispatch({ type: "newGame" }); };
   $("btn-over-close").onclick = function () {

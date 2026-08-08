@@ -56,6 +56,13 @@
   var UNIT = 1000;
   var W4 = 35, W3 = 80, W2 = 130;
   var WIN_SCORE = 10;
+  var DIST_PRESETS = {
+    uniform: { e: 0, v: 0, label: "均匀" },
+    mild: { e: 0.3, v: 1.2, label: "适中" },
+    recommended: { e: 0.5, v: 2.0, label: "推荐" },
+    strong: { e: 0.7, v: 2.8, label: "明显" }
+  };
+  var DIST_DEFAULT = "recommended";
   var DECK_NAME_DEFAULT = "内置题库";
 
   function shuffle(a) {
@@ -74,8 +81,22 @@
 
   function other(t) { return t === "A" ? "B" : "A"; }
 
-  function newTarget() {
-    return { center: 150 + Math.floor(Math.random() * 700), w4: W4, w3: W3, w2: W2 };
+  function sampleTargetX(dist) {
+    var pr = DIST_PRESETS[dist] || DIST_PRESETS[DIST_DEFAULT];
+    var e = pr.e, v = pr.v, pmax = 1 + e;
+    for (;;) {
+      var x = Math.random() * 2 - 1;
+      var y = Math.random() * pmax;
+      var p = 1 + e * x * x - v * x * x * (1 - x * x);
+      if (y <= p) return x;
+    }
+  }
+
+  function newTarget(s) {
+    var x = sampleTargetX(s ? s.dist : DIST_DEFAULT);
+    var c = Math.round(500 + 350 * x);
+    c = Math.max(150, Math.min(850, c));
+    return { center: c, w4: W4, w3: W3, w2: W2 };
   }
 
   function drawFromDeck(s) {
@@ -102,6 +123,7 @@
       deck: [],
       ordered: false,
       winScore: WIN_SCORE,
+      dist: DIST_DEFAULT,
       sudden: false,
       sdPts: { A: 0, B: 0 },
       sdTurns: { A: false, B: false },
@@ -117,7 +139,7 @@
     s.phase = "psychic";
     s.card = drawFromDeck(s);
     s.side = 0;
-    s.target = newTarget();
+    s.target = newTarget(s);
     s.dial = UNIT / 2;
     s.guess = null;
   }
@@ -287,7 +309,7 @@
         if (s.phase === "psychic") {
           s.card = drawFromDeck(s);
           s.side = 0;
-          s.target = newTarget();
+          s.target = newTarget(s);
           s.dial = UNIT / 2;
           s.guess = null;
         }
@@ -299,6 +321,9 @@
         var ws = Math.floor(Number(intent.value));
         if (isNaN(ws) || ws < 0) ws = 0;
         s.winScore = ws;
+        break;
+      case "setDist":
+        if (DIST_PRESETS[intent.value]) s.dist = intent.value;
         break;
     }
     return s;
@@ -363,6 +388,10 @@
     UNIT: UNIT,
     WIN_SCORE: WIN_SCORE,
     DECK_NAME_DEFAULT: DECK_NAME_DEFAULT,
+    DIST_PRESETS: DIST_PRESETS,
+    DIST_DEFAULT: DIST_DEFAULT,
+    sampleTargetX: sampleTargetX,
+    newTarget: newTarget,
     createGame: createGame,
     applyIntent: applyIntent,
     parseDeck: parseDeck,

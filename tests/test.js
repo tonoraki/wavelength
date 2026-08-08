@@ -118,7 +118,8 @@ async function pickFile(name, content, inputId) {
   assert(popA.indexOf("color:var(--cA)") !== -1, "active team name colored in score pop");
   assert(logA.indexOf("color:var(--cA)") !== -1, "team name colored in log");
   assert(logA.indexOf("目标") !== -1 && logA.indexOf("拨杆") !== -1, "log shows target-dial range");
-  assert(logA.indexOf("%-") !== -1, "log percentages joined with dash");
+  const logText = doc.getElementById("log").children[0].textContent;
+  assert(logText.indexOf("%-") !== -1, "log percentages joined with dash");
   const pcts = logA.match(/\d+%/g).map((s) => parseInt(s, 10));
   assert(pcts.length === 2 && pcts[0] <= pcts[1], "log percents sorted ascending");
   assert(logA.indexOf('本队 <span style="color:var(--cA)">+') !== -1, "log own pts in team color");
