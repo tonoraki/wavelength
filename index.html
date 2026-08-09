@@ -135,8 +135,8 @@
 
   .spectrum-wrap { position: relative; margin: 30px 10px 40px; user-select: none; }
   .axis { position: relative; height: 34px; border-radius: 20px; overflow: hidden; }
-  .bands { position: absolute; inset: 0; opacity: 0; transition: none; z-index: 2; }
-  .bands.shown { opacity: 1; transition: opacity .6s; }
+  .bands { position: absolute; inset: 0; opacity: 0; z-index: 2; }
+  .bands.shown { opacity: 1; }
   .band { position: absolute; top: 0; bottom: 0; display: flex; align-items: center; justify-content: center; }
   .band.b2 { background: rgba(255, 93, 226, .85); }
   .band.b3 { background: rgba(255, 173, 66, .9); }
@@ -164,7 +164,7 @@
     background: linear-gradient(180deg, rgba(64, 108, 255, .55), rgba(40, 70, 210, .45)),
       repeating-linear-gradient(45deg, rgba(255,255,255,.05) 0 10px, transparent 10px 20px);
     border: 1px solid rgba(120, 160, 255, .6);
-    transform-origin: right center; transition: none;
+    transform-origin: right center; transition: transform .5s ease;
     display: flex; align-items: center; justify-content: center;
   }
   .screen .screen-txt {
@@ -172,7 +172,7 @@
     text-shadow: 0 1px 4px rgba(0,0,0,.6);
     background: rgba(0,0,30,.35); padding: 6px 14px; border-radius: 20px;
   }
-  .screen.open { transform: scaleX(0); transition: transform .5s ease; }
+  .screen.open { transform: scaleX(0); }
   .screen.open .screen-txt { opacity: 0; transition: opacity .2s; }
   .dial {
     position: absolute; top: -24px; left: 50%; z-index: 4;
@@ -859,11 +859,17 @@
     });
   }
 
+  function targetVisible() {
+    return psychicViewing || G.phase === "revealed" || G.phase === "over";
+  }
+
   function renderBands() {
-    var t = G.target;
-    if (!t) return;
     var box = $("bands");
-    box.innerHTML = "";
+    var t = G.target;
+    if (!t || !targetVisible()) {
+      box.innerHTML = "";
+      return;
+    }
     function add(cls, lo, hi, label) {
       var d = document.createElement("div");
       d.className = "band " + cls;
@@ -900,7 +906,7 @@
   }
 
   function renderTargetVisibility() {
-    var show = psychicViewing || G.phase === "revealed" || G.phase === "over";
+    var show = targetVisible();
     var s = $("screen"), b = $("bands"), m = $("center-mark");
     if (show) {
       s.classList.add("open");
