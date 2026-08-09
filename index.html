@@ -866,10 +866,12 @@
   function renderBands() {
     var box = $("bands");
     var t = G.target;
-    if (!t || !targetVisible()) {
+    if (!t) {
       box.innerHTML = "";
       return;
     }
+    if (!targetVisible()) return;
+    box.innerHTML = "";
     function add(cls, lo, hi, label) {
       var d = document.createElement("div");
       d.className = "band " + cls;
