@@ -11,9 +11,9 @@ function bucketCounts(dist, n) {
   for (let i = 0; i < n; i++) {
     const x = WL.sampleTargetX(dist);
     const a = Math.abs(x);
-    if (a > 0.9) end++;
-    else if (a < 0.1) center++;
-    else if (a > 0.65 && a < 0.75) valley++;
+    if (a > 0.45) end++;
+    else if (a < 0.05) center++;
+    else if (a > 0.13 && a < 0.19) valley++;
   }
   return { end, center, valley };
 }
@@ -25,7 +25,7 @@ assert(Math.abs(u.end - u.center) / u.center < 0.3, `uniform roughly flat (end=$
 
 function farEndsFrac(dist, n) {
   let far = 0;
-  for (let i = 0; i < n; i++) if (Math.abs(WL.sampleTargetX(dist)) > 0.79) far++;
+  for (let i = 0; i < n; i++) if (Math.abs(WL.sampleTargetX(dist)) > 0.4) far++;
   return far / n;
 }
 
@@ -50,7 +50,8 @@ for (const [name, dist] of [["mild", "mild"], ["recommended", "recommended"], ["
 }
 
 const t = WL.newTarget({ dist: "recommended" });
-assert(t.center >= 150 && t.center <= 850, "target center within allowed range");
+assert(t.center >= 0 && t.center <= 1000, "target center within [0,1000]");
+assert(t.center - t.w4 >= -35 && t.center + t.w4 <= 1035, "4-point wedge always at least partially on bar");
 assert(t.w4 === 35 && t.w3 === 80 && t.w2 === 130, "band widths unchanged");
 
 console.log("DIST TEST PASSED");

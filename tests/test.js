@@ -163,6 +163,10 @@ async function pickFile(name, content, inputId) {
   click("btn-start");
 
   const centerOf = () => (parseFloat(doc.getElementById("center-mark").style.left) / 100) * 1000;
+  const dragTo2Band = () => {
+    const c = centerOf();
+    dragTo(c + 100 > 1000 ? c - 100 : c + 100);
+  };
   const dragTo = (x) => {
     interact.dispatchEvent(new PE2("pointerdown", { clientX: x, pointerId: 1, bubbles: true }));
     interact.dispatchEvent(new PE2("pointermove", { clientX: x, pointerId: 1, bubbles: true }));
@@ -180,7 +184,7 @@ async function pickFile(name, content, inputId) {
   const reveal = () => click(doc.getElementById("controls").children[0]);
 
   psychicPass();
-  dragTo(centerOf() + 100);
+  dragTo2Band();
   click("btn-lock");
   guessCorrect();
   reveal();
@@ -198,7 +202,7 @@ async function pickFile(name, content, inputId) {
 
   click(doc.getElementById("controls").children[0]);
   psychicPass();
-  dragTo(centerOf() + 100);
+  dragTo2Band();
   click("btn-lock");
   guessCorrect();
   reveal();

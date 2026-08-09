@@ -57,12 +57,19 @@
   var W4 = 35, W3 = 80, W2 = 130;
   var WIN_SCORE = 10;
   var DIST_PRESETS = {
-    uniform: { e: 0, v: 0, label: "均匀" },
-    mild: { e: 0.6, v: 2.4, label: "适中" },
-    recommended: { e: 0.9, v: 3.6, label: "推荐" },
-    strong: { e: 1.2, v: 4.8, label: "明显" }
+    uniform: { M: 1, E: 1, V: 1, U: 0.16, label: "均匀" },
+    mild: { M: 0.9, E: 1.2, V: 0.65, U: 0.16, label: "适中" },
+    recommended: { M: 0.9, E: 1.5, V: 0.5, U: 0.16, label: "推荐" },
+    strong: { M: 0.9, E: 1.8, V: 0.35, U: 0.16, label: "明显" }
   };
   var DIST_DEFAULT = "recommended";
+
+  function distDensity(pr, u) {
+    var a = Math.abs(u);
+    var t = a <= pr.U ? a / pr.U : (a - pr.U) / (0.5 - pr.U);
+    var s = t * t * (3 - 2 * t);
+    return a <= pr.U ? pr.M + (pr.V - pr.M) * s : pr.V + (pr.E - pr.V) * s;
+  }
   var DECK_NAME_DEFAULT = "内置题库";
 
   function shuffle(a) {
@@ -83,19 +90,18 @@
 
   function sampleTargetX(dist) {
     var pr = DIST_PRESETS[dist] || DIST_PRESETS[DIST_DEFAULT];
-    var e = pr.e, v = pr.v, pmax = 1 + e;
+    var pmax = pr.E;
     for (;;) {
-      var x = Math.random() * 2 - 1;
+      var u = Math.random() - 0.5;
       var y = Math.random() * pmax;
-      var p = 1 + e * x * x - v * x * x * (1 - x * x);
-      if (y <= p) return x;
+      if (y <= distDensity(pr, u)) return u;
     }
   }
 
   function newTarget(s) {
-    var x = sampleTargetX(s ? s.dist : DIST_DEFAULT);
-    var c = Math.round(500 + 350 * x);
-    c = Math.max(150, Math.min(850, c));
+    var u = sampleTargetX(s ? s.dist : DIST_DEFAULT);
+    var c = Math.round(500 + 1000 * u);
+    c = Math.max(0, Math.min(1000, c));
     return { center: c, w4: W4, w3: W3, w2: W2 };
   }
 
@@ -390,6 +396,7 @@
     DECK_NAME_DEFAULT: DECK_NAME_DEFAULT,
     DIST_PRESETS: DIST_PRESETS,
     DIST_DEFAULT: DIST_DEFAULT,
+    distDensity: distDensity,
     sampleTargetX: sampleTargetX,
     newTarget: newTarget,
     createGame: createGame,
