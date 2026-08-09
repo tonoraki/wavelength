@@ -165,7 +165,7 @@ async function pickFile(name, content, inputId) {
   const centerOf = () => (parseFloat(doc.getElementById("center-mark").style.left) / 100) * 1000;
   const dragTo2Band = () => {
     const c = centerOf();
-    dragTo(c + 100 > 1000 ? c - 100 : c + 100);
+    dragTo(c + 50 > 1000 ? c - 50 : c + 50);
   };
   const dragTo = (x) => {
     interact.dispatchEvent(new PE2("pointerdown", { clientX: x, pointerId: 1, bubbles: true }));
@@ -194,7 +194,7 @@ async function pickFile(name, content, inputId) {
 
   click(doc.getElementById("controls").children[0]);
   psychicPass();
-  dragTo(0);
+  dragTo(centerOf() < 500 ? 1000 : 0);
   click("btn-lock");
   guessCorrect();
   reveal();

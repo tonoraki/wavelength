@@ -51,9 +51,9 @@ for (const [name, dist] of [["mild", "mild"], ["recommended", "recommended"], ["
 
 const t = WL.newTarget({ dist: "recommended" });
 assert(t.center >= 0 && t.center <= 1000, "target center within [0,1000]");
-assert(t.center - t.w4 >= -26 && t.center + t.w4 <= 1026, "4-point wedge always at least partially on bar");
-assert(t.w4 === 26 && t.w3 === 78 && t.w2 === 130, "band widths unchanged");
-assert(t.w3 - t.w4 === 2 * t.w4 && t.w2 - t.w3 === 2 * t.w4, "4/3/2 band widths equal (52 each)");
+assert(t.center + t.w4 >= 0 && t.center - t.w4 <= 1000, "4-point wedge always at least partially on bar");
+assert(t.w4 === 12.5 && t.w3 === 37.5 && t.w2 === 62.5, "band widths 25 total (12.5/37.5/62.5)");
+assert(t.w3 - t.w4 === 2 * t.w4 && t.w2 - t.w3 === 2 * t.w4, "4/3/2 band widths equal (25 each)");
 
 console.log("DIST TEST PASSED");
 process.exit(0);
