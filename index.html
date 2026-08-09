@@ -137,10 +137,15 @@
   .axis { position: relative; height: 34px; border-radius: 20px; overflow: hidden; }
   .bands { position: absolute; inset: 0; opacity: 0; transition: opacity .6s; }
   .bands.shown { opacity: 1; }
-  .band { position: absolute; top: 0; bottom: 0; }
+  .band { position: absolute; top: 0; bottom: 0; display: flex; align-items: center; justify-content: center; }
   .band.b2 { background: rgba(255, 93, 226, .85); }
   .band.b3 { background: rgba(255, 173, 66, .9); }
   .band.b4 { background: rgba(255, 209, 102, .95); }
+  .band-label {
+    font-size: 10px; font-weight: 700; color: #14102b;
+    background: rgba(255, 255, 255, .6); border-radius: 8px;
+    padding: 1px 4px; white-space: nowrap; line-height: 1.2;
+  }
   .center-mark {
     position: absolute; top: -8px; width: 14px; height: 14px;
     background: #fff; transform: translateX(-50%) rotate(45deg);
@@ -859,18 +864,24 @@
     if (!t) return;
     var box = $("bands");
     box.innerHTML = "";
-    function add(cls, lo, hi) {
+    function add(cls, lo, hi, label) {
       var d = document.createElement("div");
       d.className = "band " + cls;
-      d.style.left = lo + "%";
-      d.style.width = (hi - lo) + "%";
+      d.style.left = (lo / WL.UNIT * 100) + "%";
+      d.style.width = ((hi - lo) / WL.UNIT * 100) + "%";
+      if (label) {
+        var s = document.createElement("span");
+        s.className = "band-label";
+        s.textContent = label;
+        d.appendChild(s);
+      }
       box.appendChild(d);
     }
-    add("b2", t.center - t.w2, t.center - t.w3);
-    add("b3", t.center - t.w3, t.center - t.w4);
-    add("b4", t.center - t.w4, t.center + t.w4);
-    add("b3", t.center + t.w4, t.center + t.w3);
-    add("b2", t.center + t.w3, t.center + t.w2);
+    add("b2", t.center - t.w2, t.center - t.w3, "2分");
+    add("b3", t.center - t.w3, t.center - t.w4, "3分");
+    add("b4", t.center - t.w4, t.center + t.w4, "4分");
+    add("b3", t.center + t.w4, t.center + t.w3, "3分");
+    add("b2", t.center + t.w3, t.center + t.w2, "2分");
     $("center-mark").style.left = (t.center / WL.UNIT * 100) + "%";
   }
 
