@@ -54,7 +54,7 @@
   ];
 
   var UNIT = 1000;
-  var W4 = 35, W3 = 80, W2 = 130;
+  var W4 = 26, W3 = 78, W2 = 130;
   var WIN_SCORE = 10;
   var DIST_PRESETS = {
     uniform: { M: 1, E: 1, V: 1, U: 0.16, label: "均匀" },
