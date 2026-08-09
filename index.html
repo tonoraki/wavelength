@@ -158,10 +158,7 @@
   }
   .ticks {
     position: absolute; inset: 0; z-index: 4; pointer-events: none;
-    background: repeating-linear-gradient(90deg,
-      transparent 0 calc(2.5% - 0.75px),
-      rgba(180, 172, 225, .5) calc(2.5% - 0.75px) calc(2.5% + 0.75px),
-      transparent calc(2.5% + 0.75px) 5%);
+    border-radius: 20px;
   }
   .screen {
     position: absolute; inset: 0; border-radius: 20px; z-index: 3;
@@ -325,7 +322,7 @@
       <div class="center-mark" id="center-mark"></div>
       <div class="bar"></div>
       <div class="screen" id="screen"><span class="screen-txt">✦ 目标已被蓝屏遮挡 ✦</span></div>
-      <div class="ticks"></div>
+      <div class="ticks" id="ticks"></div>
     </div>
     <div class="interact" id="interact"></div>
     <div class="spectrum-labels" id="labels"><span></span><span></span></div>
@@ -448,6 +445,10 @@
         <div class="field">
           <label>获胜分数（0 = 无上限）</label>
           <input type="number" id="opt-winscore" min="0" max="999" value="10">
+        </div>
+        <div class="field">
+          <label>色带总宽（决定色带与刻度间距）</label>
+          <input type="number" id="opt-bandwidth" min="2" max="200" step="1" value="36">
         </div>
       </div>
       <div class="field">
@@ -803,6 +804,7 @@
     renderTurn();
     renderCard();
     renderBands();
+    renderTicks();
     renderControls();
     renderDial();
     renderTargetVisibility();
@@ -866,6 +868,16 @@
 
   function targetVisible() {
     return psychicViewing || G.phase === "revealed" || G.phase === "over";
+  }
+
+  function renderTicks() {
+    var bw = (G.bandWidth > 0 ? G.bandWidth : WL.BAND_WIDTH) || 36;
+    var period = (bw / WL.UNIT) * 100;
+    var half = period / 2;
+    $("ticks").style.background =
+      "repeating-linear-gradient(90deg, transparent 0 calc(" + half + "% - 0.75px), " +
+      "rgba(180,172,225,.5) calc(" + half + "% - 0.75px) calc(" + half + "% + 0.75px), " +
+      "transparent calc(" + half + "% + 0.75px) " + period + "%)";
   }
 
   function renderBands() {
@@ -1035,6 +1047,7 @@
       $("opt-ordered").checked = !!G.ordered;
       $("opt-winscore").value = G.winScore;
       $("opt-dist").value = G.dist || WL.DIST_DEFAULT;
+      $("opt-bandwidth").value = G.bandWidth;
     }
 
     var showDeckServer = ONLINE && ROLE === "controller";
@@ -1315,6 +1328,12 @@
   });
   $("opt-dist").addEventListener("change", function () {
     dispatch({ type: "setDist", value: this.value });
+  });
+  $("opt-bandwidth").addEventListener("change", function () {
+    var v = Math.floor(Number(this.value));
+    if (isNaN(v) || v < 2) v = WL.BAND_WIDTH;
+    this.value = v;
+    dispatch({ type: "setBandWidth", value: v });
   });
   $("btn-playagain").onclick = function () { dispatch({ type: "newGame" }); };
   $("btn-over-close").onclick = function () {

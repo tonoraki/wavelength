@@ -165,7 +165,7 @@ async function pickFile(name, content, inputId) {
   const centerOf = () => (parseFloat(doc.getElementById("center-mark").style.left) / 100) * 1000;
   const dragTo2Band = () => {
     const c = centerOf();
-    dragTo(c + 50 > 1000 ? c - 50 : c + 50);
+    dragTo(c + 70 > 1000 ? c - 70 : c + 70);
   };
   const dragTo = (x) => {
     interact.dispatchEvent(new PE2("pointerdown", { clientX: x, pointerId: 1, bubbles: true }));

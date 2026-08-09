@@ -54,7 +54,7 @@
   ];
 
   var UNIT = 1000;
-  var W4 = 12.5, W3 = 37.5, W2 = 62.5;
+  var BAND_WIDTH = 36;
   var WIN_SCORE = 10;
   var DIST_PRESETS = {
     uniform: { M: 1, E: 1, V: 1, U: 0.16, label: "均匀" },
@@ -99,10 +99,11 @@
   }
 
   function newTarget(s) {
+    var bw = s && s.bandWidth > 0 ? s.bandWidth : BAND_WIDTH;
     var u = sampleTargetX(s ? s.dist : DIST_DEFAULT);
     var c = Math.round(500 + 1000 * u);
     c = Math.max(0, Math.min(1000, c));
-    return { center: c, w4: W4, w3: W3, w2: W2 };
+    return { center: c, w4: bw / 2, w3: bw * 1.5, w2: bw * 2.5 };
   }
 
   function drawFromDeck(s) {
@@ -130,6 +131,7 @@
       ordered: false,
       winScore: WIN_SCORE,
       dist: DIST_DEFAULT,
+      bandWidth: BAND_WIDTH,
       sudden: false,
       sdPts: { A: 0, B: 0 },
       sdTurns: { A: false, B: false },
@@ -331,6 +333,11 @@
       case "setDist":
         if (DIST_PRESETS[intent.value]) s.dist = intent.value;
         break;
+      case "setBandWidth":
+        var bw = Math.floor(Number(intent.value));
+        if (isNaN(bw) || bw < 2) bw = BAND_WIDTH;
+        s.bandWidth = bw;
+        break;
     }
     return s;
   }
@@ -392,6 +399,7 @@
   var WL = {
     BUILTIN_DECK: BUILTIN_DECK,
     UNIT: UNIT,
+    BAND_WIDTH: BAND_WIDTH,
     WIN_SCORE: WIN_SCORE,
     DECK_NAME_DEFAULT: DECK_NAME_DEFAULT,
     DIST_PRESETS: DIST_PRESETS,

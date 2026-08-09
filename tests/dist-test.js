@@ -52,8 +52,11 @@ for (const [name, dist] of [["mild", "mild"], ["recommended", "recommended"], ["
 const t = WL.newTarget({ dist: "recommended" });
 assert(t.center >= 0 && t.center <= 1000, "target center within [0,1000]");
 assert(t.center + t.w4 >= 0 && t.center - t.w4 <= 1000, "4-point wedge always at least partially on bar");
-assert(t.w4 === 12.5 && t.w3 === 37.5 && t.w2 === 62.5, "band widths 25 total (12.5/37.5/62.5)");
-assert(t.w3 - t.w4 === 2 * t.w4 && t.w2 - t.w3 === 2 * t.w4, "4/3/2 band widths equal (25 each)");
+assert(t.w4 === 18 && t.w3 === 54 && t.w2 === 90, "default band widths total 36 (18/54/90)");
+assert(t.w3 - t.w4 === 2 * t.w4 && t.w2 - t.w3 === 2 * t.w4, "4/3/2 band widths equal (36 each)");
+const t2 = WL.newTarget({ dist: "uniform", bandWidth: 25 });
+assert(t2.w4 === 12.5 && t2.w3 === 37.5 && t2.w2 === 62.5, "bandWidth override honored (25)");
+assert(WL.BAND_WIDTH === 36, "BAND_WIDTH default exported as 36");
 
 console.log("DIST TEST PASSED");
 process.exit(0);
