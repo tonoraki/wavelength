@@ -58,9 +58,9 @@
   var WIN_SCORE = 10;
   var DIST_PRESETS = {
     uniform: { e: 0, v: 0, label: "均匀" },
-    mild: { e: 0.3, v: 1.2, label: "适中" },
-    recommended: { e: 0.5, v: 2.0, label: "推荐" },
-    strong: { e: 0.7, v: 2.8, label: "明显" }
+    mild: { e: 0.6, v: 2.4, label: "适中" },
+    recommended: { e: 0.9, v: 3.6, label: "推荐" },
+    strong: { e: 1.2, v: 4.8, label: "明显" }
   };
   var DIST_DEFAULT = "recommended";
   var DECK_NAME_DEFAULT = "内置题库";
