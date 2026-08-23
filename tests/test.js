@@ -1,11 +1,12 @@
 const fs = require("fs");
 const path = require("path");
-const { JSDOM } = require("/home/carnot/code/vibing/wavelength/tests/node_modules/jsdom");
+const { pathToFileURL } = require("url");
+const { JSDOM } = require("jsdom");
 
 const ROOT = path.join(__dirname, "..");
 const html = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
 const dom = new JSDOM(html, {
-  url: "file://" + path.join(ROOT, "index.html"),
+  url: pathToFileURL(path.join(ROOT, "index.html")).href,
   runScripts: "dangerously",
   resources: "usable",
   pretendToBeVisual: true
@@ -107,10 +108,12 @@ async function pickFile(name, content, inputId) {
   assert(doc.getElementById("hint").textContent.indexOf("左边") !== -1, "guess phase");
   click(doc.getElementById("controls").children[1]);
   assert(doc.getElementById("hint").textContent.indexOf("揭示目标") !== -1, "reveal phase");
+  assert(doc.querySelector(".guess-choice") && doc.querySelector(".guess-choice").textContent.indexOf("右边") !== -1, "opponent choice shown before reveal");
 
   const a0 = parseInt(doc.getElementById("scoreA").textContent, 10);
   click(doc.getElementById("controls").children[0]);
   assert(parseInt(doc.getElementById("scoreA").textContent, 10) >= a0, "A score updated after reveal");
+  assert(doc.querySelector(".guess-result") && doc.querySelector(".guess-result").textContent.indexOf("等待揭示") === -1, "opponent choice result shown after reveal");
   assert(doc.getElementById("screen").className.indexOf("open") !== -1, "screen open after reveal");
   assert(doc.getElementById("log").children.length === 1, "round logged");
   const popA = doc.getElementById("score-pop").innerHTML;
@@ -128,6 +131,12 @@ async function pickFile(name, content, inputId) {
   click(doc.getElementById("controls").children[0]);
   assert(doc.getElementById("screen").className.indexOf("open") === -1, "screen reset for new round");
   assert(doc.getElementById("hint").textContent.indexOf("粉队") !== -1, "turn switched to B");
+
+  click(doc.getElementById("controls").children[0]);
+  click(doc.getElementById("controls").children[0]);
+  click("btn-lock");
+  click(doc.getElementById("controls").children[0]);
+  assert(doc.querySelector(".guess-result").textContent.indexOf("等待揭示") !== -1, "new-round guess does not reuse previous reveal result");
 
   click("btn-restart");
   click("btn-reset-deck");

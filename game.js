@@ -150,6 +150,7 @@
     s.target = newTarget(s);
     s.dial = UNIT / 2;
     s.guess = null;
+    s.reveal = null;
   }
 
   function doSetup(s, intent) {

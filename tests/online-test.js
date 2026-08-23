@@ -2,7 +2,7 @@ process.env.PORT = "0";
 const http = require("http");
 const fs = require("fs");
 const path = require("path");
-const { JSDOM } = require(path.join(__dirname, "node_modules", "jsdom"));
+const { JSDOM } = require("jsdom");
 const { server } = require(path.join(__dirname, "..", "server.js"));
 
 const ROOT = path.join(__dirname, "..");
@@ -129,9 +129,11 @@ function click(doc, id) {
   await waitFor(() => mdoc.getElementById("hint").textContent.indexOf("左边") !== -1, "monitor sees guess phase");
   click(cdoc, cdoc.getElementById("controls").children[1]);
   await waitFor(() => mdoc.getElementById("hint").textContent.indexOf("揭示目标") !== -1, "monitor sees reveal phase");
+  await waitFor(() => mdoc.querySelector(".guess-choice") && mdoc.querySelector(".guess-choice").textContent.indexOf("右边") !== -1, "monitor prominently shows opponent right-side choice");
 
   click(cdoc, cdoc.getElementById("controls").children[0]);
   await waitFor(() => mdoc.getElementById("screen").className.indexOf("open") !== -1, "monitor screen open after reveal");
+  assert(mdoc.querySelector(".guess-choice") && mdoc.querySelector(".guess-result").textContent.indexOf("等待揭示") === -1, "monitor keeps choice and shows its result after reveal");
   await waitFor(() => mdoc.getElementById("log").children.length === 1, "monitor log has 1 entry");
 
   click(cdoc, cdoc.getElementById("controls").children[0]);

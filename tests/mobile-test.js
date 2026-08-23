@@ -1,5 +1,7 @@
 const path = require("path");
-const puppeteer = require("/home/carnot/code/vibing/wavelength/tests/node_modules/puppeteer-core");
+const { pathToFileURL } = require("url");
+const puppeteer = require("puppeteer-core");
+const findChrome = require("./chrome.js");
 
 const ROOT = path.join(__dirname, "..");
 function assert(cond, msg) {
@@ -8,10 +10,10 @@ function assert(cond, msg) {
 }
 
 (async function () {
-  const browser = await puppeteer.launch({ executablePath: "/usr/bin/google-chrome", headless: "new", args: ["--no-sandbox"] });
+  const browser = await puppeteer.launch({ executablePath: findChrome(), headless: "new", args: ["--no-sandbox"] });
   const page = await browser.newPage();
   await page.setViewport({ width: 360, height: 640, isMobile: true, hasTouch: true });
-  await page.goto("file://" + path.join(ROOT, "index.html"), { waitUntil: "load", timeout: 20000 });
+  await page.goto(pathToFileURL(path.join(ROOT, "index.html")).href, { waitUntil: "load", timeout: 20000 });
   await new Promise((r) => setTimeout(r, 600));
 
   await page.evaluate(() => {

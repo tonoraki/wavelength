@@ -1,10 +1,11 @@
 process.env.PORT = "3101";
 const path = require("path");
-const puppeteer = require(path.join(__dirname, "node_modules", "puppeteer-core"));
+const puppeteer = require("puppeteer-core");
+const findChrome = require("./chrome.js");
 const { server } = require(path.join(__dirname, "..", "server.js"));
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const CHROME = "/usr/bin/google-chrome";
+const CHROME = findChrome();
 
 function assert(cond, msg) {
   if (!cond) throw new Error("FAIL: " + msg);

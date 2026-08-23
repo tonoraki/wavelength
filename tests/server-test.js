@@ -1,7 +1,7 @@
 process.env.PORT = "0";
 const http = require("http");
 const path = require("path");
-const { server, state } = require(path.join(__dirname, "..", "server.js"));
+const { server, state, MAX_BODY_BYTES } = require(path.join(__dirname, "..", "server.js"));
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -20,6 +20,26 @@ function req(method, url, body) {
     if (body) r.write(JSON.stringify(body));
     r.end();
   });
+}
+
+function reqRaw(method, url, raw, headers) {
+  return new Promise((resolve, reject) => {
+    const u = new URL(url);
+    const r = http.request({
+      hostname: u.hostname, port: u.port, path: u.pathname, method, headers: headers || {}
+    }, (res) => {
+      let d = "";
+      res.on("data", (c) => { d += c; });
+      res.on("end", () => resolve({ status: res.statusCode, body: d }));
+    });
+    r.on("error", reject);
+    r.end(raw);
+  });
+}
+
+function jsonBodyOfSize(size) {
+  const empty = JSON.stringify({ type: "noop", padding: "" });
+  return JSON.stringify({ type: "noop", padding: "x".repeat(size - Buffer.byteLength(empty)) });
 }
 
 function assert(cond, msg) {
@@ -45,6 +65,10 @@ function latestSnapshot() {
   assert(r.status === 200 && r.body.indexOf("WAVELENGTH") !== -1, "index.html served");
   r = await req("GET", base + "/game.js");
   assert(r.status === 200, "game.js served");
+  r = await req("GET", base + "/app.js");
+  assert(r.status === 200, "app.js served");
+  r = await req("GET", base + "/app.css");
+  assert(r.status === 200, "app.css served");
   r = await req("GET", base + "/nope");
   assert(r.status === 404, "missing file 404");
 
@@ -85,6 +109,7 @@ function latestSnapshot() {
   await sleep(100);
   s = latestSnapshot();
   assert(s.phase === "psychic" && s.active === "B" && s.round === 2, "next round switched to B");
+  assert(s.reveal === null, "next round clears previous reveal result");
 
   const beforeSkip = latestSnapshot().card;
   await req("POST", base + "/api/intent", { type: "skipCard" });
@@ -119,6 +144,29 @@ function latestSnapshot() {
   assert(r.status === 200 && j.cards === folderDeck.cards, "folder deck loaded by name");
   r = await req("POST", base + "/api/deck/load", { file: "../cards.yaml" });
   assert(r.status === 400, "path traversal rejected");
+
+  r = await reqRaw("POST", base + "/api/intent", "{bad json", {
+    "Content-Type": "application/json"
+  });
+  assert(r.status === 400, "invalid JSON rejected 400");
+  const exactBody = jsonBodyOfSize(MAX_BODY_BYTES);
+  assert(Buffer.byteLength(exactBody) === MAX_BODY_BYTES, "exact-limit fixture is 256 KiB");
+  r = await reqRaw("POST", base + "/api/intent", exactBody, {
+    "Content-Type": "application/json",
+    "Content-Length": Buffer.byteLength(exactBody)
+  });
+  assert(r.status === 200, "request exactly at body limit accepted");
+  const overBody = jsonBodyOfSize(MAX_BODY_BYTES + 1);
+  r = await reqRaw("POST", base + "/api/intent", overBody, {
+    "Content-Type": "application/json",
+    "Content-Length": Buffer.byteLength(overBody)
+  });
+  assert(r.status === 413, "oversized declared body rejected 413");
+  r = await reqRaw("POST", base + "/api/intent", overBody, {
+    "Content-Type": "application/json",
+    "Transfer-Encoding": "chunked"
+  });
+  assert(r.status === 413, "oversized streamed body rejected 413");
 
   streamReq.destroy();
   server.close();

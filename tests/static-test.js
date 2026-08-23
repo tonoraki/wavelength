@@ -1,11 +1,12 @@
 const http = require("http");
 const fs = require("fs");
 const path = require("path");
-const puppeteer = require(path.join(__dirname, "node_modules", "puppeteer-core"));
+const puppeteer = require("puppeteer-core");
+const findChrome = require("./chrome.js");
 
 const ROOT = path.join(__dirname, "..");
-const MIME = { ".html": "text/html; charset=utf-8", ".js": "application/javascript; charset=utf-8", ".json": "application/json; charset=utf-8", ".yaml": "text/plain; charset=utf-8" };
-const CHROME = "/usr/bin/google-chrome";
+const MIME = { ".html": "text/html; charset=utf-8", ".css": "text/css; charset=utf-8", ".js": "application/javascript; charset=utf-8", ".json": "application/json; charset=utf-8", ".yaml": "text/plain; charset=utf-8" };
+const CHROME = findChrome();
 
 function assert(cond, msg) {
   if (!cond) throw new Error("FAIL: " + msg);
