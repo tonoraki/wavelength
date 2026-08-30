@@ -392,11 +392,19 @@
   function renderTicks() {
     var bw = (G.bandWidth > 0 ? G.bandWidth : WL.BAND_WIDTH) || 36;
     var period = (bw / WL.UNIT) * 100;
-    var half = period / 2;
-    $("ticks").style.background =
-      "repeating-linear-gradient(90deg, transparent 0 calc(" + half + "% - 0.75px), " +
-      "rgba(180,172,225,.5) calc(" + half + "% - 0.75px) calc(" + half + "% + 0.75px), " +
-      "transparent calc(" + half + "% + 0.75px) " + period + "%)";
+    var box = $("ticks");
+    box.innerHTML = "";
+    function addTick(position) {
+      var tick = document.createElement("i");
+      tick.className = "tick-mark";
+      tick.style.left = position + "%";
+      box.appendChild(tick);
+    }
+    addTick(50);
+    for (var offset = period; offset <= 50 + 0.000001; offset += period) {
+      addTick(50 - offset);
+      addTick(50 + offset);
+    }
   }
 
   function renderBands() {

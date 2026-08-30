@@ -82,6 +82,9 @@ async function pickFile(name, content, inputId) {
   const sides = doc.getElementById("sides").children;
   assert(sides.length >= 1 && sides.length <= 2, "card rendered");
   assert(doc.getElementById("trackA").children.length === 40, "win score 100 caps score dots at 40");
+  const tickPositions = Array.from(doc.querySelectorAll("#ticks .tick-mark")).map((el) => parseFloat(el.style.left));
+  assert(tickPositions.some((x) => Math.abs(x - 50) < 1e-9), "ticks include horizontal center");
+  assert(tickPositions.every((x) => tickPositions.some((y) => Math.abs(y - (100 - x)) < 1e-7)), "ticks are mirror-symmetric around horizontal center");
 
   const skipBtn = Array.from(doc.getElementById("controls").children).find((b) => b.textContent.indexOf("跳过此题") !== -1);
   assert(!!skipBtn, "skip button present in psychic phase");

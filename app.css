@@ -152,6 +152,14 @@
     position: absolute; inset: 0; z-index: 4; pointer-events: none;
     border-radius: 20px;
   }
+  .tick-mark {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1.5px;
+    transform: translateX(-50%);
+    background: rgba(180, 172, 225, .5);
+  }
   .screen {
     position: absolute; inset: 0; border-radius: 20px; z-index: 3;
     background:
