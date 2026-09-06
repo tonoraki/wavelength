@@ -14,6 +14,16 @@ const dom = new JSDOM(html, {
 const { window } = dom;
 const doc = window.document;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+let warningBeeps = 0;
+window.AudioContext = class {
+  constructor() { this.state = "running"; this.currentTime = 0; this.destination = {}; }
+  createOscillator() {
+    return { frequency: { setValueAtTime() {} }, connect() {}, start() { warningBeeps++; }, stop() {} };
+  }
+  createGain() {
+    return { gain: { setValueAtTime() {}, exponentialRampToValueAtTime() {} }, connect() {} };
+  }
+};
 
 function click(id) {
   const el = typeof id === "string" ? doc.getElementById(id) : id;
@@ -83,8 +93,8 @@ async function pickFile(name, content, inputId) {
   assert(sides.length >= 1 && sides.length <= 2, "card rendered");
   assert(doc.getElementById("trackA").children.length === 40, "win score 100 caps score dots at 40");
   const tickPositions = Array.from(doc.querySelectorAll("#ticks .tick-mark")).map((el) => parseFloat(el.style.left));
-  assert(tickPositions.some((x) => Math.abs(x - 50) < 1e-9), "ticks include horizontal center");
-  assert(tickPositions.every((x) => tickPositions.some((y) => Math.abs(y - (100 - x)) < 1e-7)), "ticks are mirror-symmetric around horizontal center");
+  assert(tickPositions.length === 21 && tickPositions.every((x, i) => x === i * 5), "ticks use fixed 5% spacing from 0% to 100%");
+  assert(Array.from(doc.querySelectorAll("#ticks .tick-number")).map((el) => el.textContent).join(",") === "0%,25%,50%,75%,100%", "major ticks show percentage labels");
 
   const skipBtn = Array.from(doc.getElementById("controls").children).find((b) => b.textContent.indexOf("跳过此题") !== -1);
   assert(!!skipBtn, "skip button present in psychic phase");
@@ -94,6 +104,16 @@ async function pickFile(name, content, inputId) {
 
   click(doc.getElementById("controls").children[0]);
   assert(doc.getElementById("screen").className.indexOf("open") !== -1, "screen opened for psychic");
+  assert(!doc.getElementById("timer-display").classList.contains("hidden") && doc.getElementById("timer-display").textContent === "01:00", "60-second dial timer starts when target is viewed");
+  const realDateNow = window.Date.now;
+  const warningNow = realDateNow();
+  window.Date.now = () => warningNow + 55000;
+  await sleep(250);
+  assert(doc.getElementById("timer-display").classList.contains("warning") && doc.getElementById("timer-display").textContent === "00:05", "timer turns red with five seconds remaining");
+  assert(warningBeeps === 1, "five-second warning sound plays once");
+  await sleep(250);
+  assert(warningBeeps === 1, "warning sound does not repeat");
+  window.Date.now = realDateNow;
   click(doc.getElementById("controls").children[0]);
   assert(doc.getElementById("screen").className.indexOf("open") === -1, "screen closed after psychic done");
   assert(doc.getElementById("hint").textContent.indexOf("拖动金色拨杆") !== -1, "dial phase");
@@ -109,8 +129,15 @@ async function pickFile(name, content, inputId) {
 
   click("btn-lock");
   assert(doc.getElementById("hint").textContent.indexOf("左边") !== -1, "guess phase");
+  assert(doc.getElementById("timer-display").textContent === "00:15", "15-second guess timer starts after locking dial");
+  const expiryNow = realDateNow();
+  window.Date.now = () => expiryNow + 16000;
+  await sleep(250);
+  assert(doc.getElementById("timer-display").textContent === "00:00" && doc.getElementById("hint").textContent.indexOf("左边") !== -1, "expired timer stays at zero without forcing an action");
+  window.Date.now = realDateNow;
   click(doc.getElementById("controls").children[1]);
   assert(doc.getElementById("hint").textContent.indexOf("揭示目标") !== -1, "reveal phase");
+  assert(doc.getElementById("timer-display").classList.contains("hidden"), "guess timer clears after left/right choice");
   assert(doc.querySelector(".guess-choice") && doc.querySelector(".guess-choice").textContent.indexOf("右边") !== -1, "opponent choice shown before reveal");
 
   const a0 = parseInt(doc.getElementById("scoreA").textContent, 10);

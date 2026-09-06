@@ -7,7 +7,8 @@
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="app.css">
 </head>
-<body>
+<!-- 倒计时秒数可在这里调整；设为 0 可关闭对应倒计时。 -->
+<body data-dial-timer-seconds="60" data-guess-timer-seconds="15">
 <div class="wrap">
 
   <header>
@@ -15,6 +16,7 @@
       <h1 id="title-main">WAVELENGTH</h1>
       <div class="sub"><span id="sub-title">心灵波长</span> · <span id="deck-badge"></span> · <span id="conn-badge"><span class="dot"></span></span></div>
     </div>
+    <div class="timer-display hidden" id="timer-display" aria-live="polite">00:00</div>
     <button class="btn" id="btn-restart">重新开始</button>
   </header>
 
@@ -177,7 +179,7 @@
           <input type="number" id="opt-winscore" min="0" max="999" value="10">
         </div>
         <div class="field">
-          <label>色带总宽（决定色带与刻度间距）</label>
+          <label>色带总宽</label>
           <input type="number" id="opt-bandwidth" min="2" max="200" step="1" value="36">
         </div>
       </div>

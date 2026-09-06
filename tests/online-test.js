@@ -112,6 +112,7 @@ function click(doc, id) {
   assert(cdoc.getElementById("screen").className.indexOf("open") !== -1, "controller screen open for psychic");
   await sleep(150);
   assert(mdoc.getElementById("screen").className.indexOf("open") === -1, "monitor screen stays closed (secret)");
+  await waitFor(() => mdoc.getElementById("timer-display").textContent === "01:00" || mdoc.getElementById("timer-display").textContent === "00:59", "monitor receives 60-second dial timer");
 
   click(cdoc, cdoc.getElementById("controls").children[0]);
   await waitFor(() => mdoc.getElementById("hint").textContent.indexOf("拖动金色拨杆") !== -1, "monitor sees dial phase");
@@ -127,9 +128,11 @@ function click(doc, id) {
 
   click(cdoc, "btn-lock");
   await waitFor(() => mdoc.getElementById("hint").textContent.indexOf("左边") !== -1, "monitor sees guess phase");
+  await waitFor(() => mdoc.getElementById("timer-display").textContent === "00:15" || mdoc.getElementById("timer-display").textContent === "00:14", "monitor receives 15-second guess timer");
   click(cdoc, cdoc.getElementById("controls").children[1]);
   await waitFor(() => mdoc.getElementById("hint").textContent.indexOf("揭示目标") !== -1, "monitor sees reveal phase");
   await waitFor(() => mdoc.querySelector(".guess-choice") && mdoc.querySelector(".guess-choice").textContent.indexOf("右边") !== -1, "monitor prominently shows opponent right-side choice");
+  assert(mdoc.getElementById("timer-display").classList.contains("hidden"), "monitor clears timer after left/right choice");
 
   click(cdoc, cdoc.getElementById("controls").children[0]);
   await waitFor(() => mdoc.getElementById("screen").className.indexOf("open") !== -1, "monitor screen open after reveal");

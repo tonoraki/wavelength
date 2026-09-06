@@ -17,8 +17,67 @@
   var flushTimer = null;
   var heartbeatTimer = null;
   var retryDelay = 1000;
+  var warnedTimerEnd = null;
+  var audioContext = null;
 
   var $ = function (id) { return document.getElementById(id); };
+
+  function configuredTimerSeconds(attr, fallback) {
+    var value = Math.floor(Number(document.body.getAttribute(attr)));
+    if (isNaN(value)) return fallback;
+    return Math.max(0, Math.min(60 * 60, value));
+  }
+
+  function ensureAudio() {
+    var AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return null;
+    try {
+      if (!audioContext) audioContext = new AudioCtx();
+      if (audioContext.state === "suspended") audioContext.resume().catch(function () {});
+      return audioContext;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function playTimerWarning() {
+    var ctx = ensureAudio();
+    if (!ctx) return;
+    try {
+      var osc = ctx.createOscillator();
+      var gain = ctx.createGain();
+      var now = ctx.currentTime;
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(880, now);
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.16, now + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.24);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.25);
+    } catch (e) {}
+  }
+
+  function renderTimer() {
+    var el = $("timer-display");
+    if (!el) return;
+    if (!G.timerEnd || !G.timerKind) {
+      el.className = "timer-display hidden";
+      el.textContent = "00:00";
+      warnedTimerEnd = null;
+      return;
+    }
+    var remaining = Math.max(0, Math.ceil((G.timerEnd - Date.now()) / 1000));
+    var minutes = Math.floor(remaining / 60);
+    var seconds = remaining % 60;
+    el.textContent = String(minutes).padStart(2, "0") + ":" + String(seconds).padStart(2, "0");
+    el.className = "timer-display" + (remaining === 0 ? " expired" : remaining <= 5 ? " warning" : "");
+    if (remaining > 0 && remaining <= 5 && warnedTimerEnd !== G.timerEnd) {
+      warnedTimerEnd = G.timerEnd;
+      playTimerWarning();
+    }
+  }
 
   var NAMES_DEFAULT = {
     gameName: "Wavelength",
@@ -224,8 +283,9 @@
     };
     sse.onmessage = function (ev) {
       try {
+        var previousPhase = G.phase;
         G = JSON.parse(ev.data);
-        psychicViewing = false;
+        if (G.phase !== "psychic" || previousPhase !== G.phase) psychicViewing = false;
         render();
       } catch (e) {}
     };
@@ -328,6 +388,7 @@
     renderDial();
     renderTargetVisibility();
     renderModals();
+    renderTimer();
   }
 
   function renderTrack(id, score, cls) {
@@ -390,21 +451,22 @@
   }
 
   function renderTicks() {
-    var bw = (G.bandWidth > 0 ? G.bandWidth : WL.BAND_WIDTH) || 36;
-    var period = (bw / WL.UNIT) * 100;
     var box = $("ticks");
     box.innerHTML = "";
-    function addTick(position) {
+    function addTick(position, major) {
       var tick = document.createElement("i");
-      tick.className = "tick-mark";
+      tick.className = "tick-mark" + (major ? " major" : "") +
+        (position === 0 ? " edge-left" : position === 100 ? " edge-right" : "");
       tick.style.left = position + "%";
+      if (major) {
+        var label = document.createElement("span");
+        label.className = "tick-number";
+        label.textContent = position + "%";
+        tick.appendChild(label);
+      }
       box.appendChild(tick);
     }
-    addTick(50);
-    for (var offset = period; offset <= 50 + 0.000001; offset += period) {
-      addTick(50 - offset);
-      addTick(50 + offset);
-    }
+    for (var position = 0; position <= 100; position += 5) addTick(position, position % 25 === 0);
   }
 
   function renderBands() {
@@ -481,6 +543,11 @@
         } else {
           box.appendChild(mk("查看" + T("target") + "（仅 " + T("psychic") + "）", "primary", function () {
             psychicViewing = true;
+            ensureAudio();
+            dispatch({
+              type: "startDialTimer",
+              timerSeconds: configuredTimerSeconds("data-dial-timer-seconds", 60)
+            });
             render();
           }));
         }
@@ -493,7 +560,11 @@
       hint.innerHTML = teamName(G.active, t.name) + " 全队讨论" + T("clue") + "，拖动金色" + T("dial") + "到猜测位置（<span class='warn'>" + T("psychic") + " 请保持沉默）</span>，然后锁定。";
       if (control) {
         var lock = mk("锁定" + T("dial") + "位置", "primary", function () {
-          dispatch({ type: "lock" });
+          ensureAudio();
+          dispatch({
+            type: "lock",
+            timerSeconds: configuredTimerSeconds("data-guess-timer-seconds", 15)
+          });
         });
         lock.id = "btn-lock";
         box.appendChild(lock);
@@ -931,11 +1002,13 @@
     });
   });
   $("btn-role-controller").onclick = function () {
+    ensureAudio();
     ROLE = "controller";
     $("role-modal").classList.add("hidden");
     render();
   };
   $("btn-role-monitor").onclick = function () {
+    ensureAudio();
     ROLE = "monitor";
     $("role-modal").classList.add("hidden");
     render();
@@ -959,4 +1032,5 @@
   render();
   initNames();
   checkOnline();
+  setInterval(renderTimer, 200);
 })();

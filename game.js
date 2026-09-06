@@ -138,6 +138,8 @@
       catchup: false,
       result: null,
       reveal: null,
+      timerKind: null,
+      timerEnd: null,
       log: []
     };
   }
@@ -151,6 +153,8 @@
     s.dial = UNIT / 2;
     s.guess = null;
     s.reveal = null;
+    s.timerKind = null;
+    s.timerEnd = null;
   }
 
   function doSetup(s, intent) {
@@ -169,6 +173,8 @@
     s.catchup = false;
     s.result = null;
     s.reveal = null;
+    s.timerKind = null;
+    s.timerEnd = null;
     s.log = [];
     startRound(s);
   }
@@ -187,6 +193,8 @@
     s.catchup = false;
     s.result = null;
     s.reveal = null;
+    s.timerKind = null;
+    s.timerEnd = null;
     s.log = [];
     s.phase = "setup";
   }
@@ -266,6 +274,14 @@
     return Math.max(0, Math.min(UNIT, Math.round(v)));
   }
 
+  function startTimer(s, kind, value, fallback) {
+    var seconds = Math.floor(Number(value));
+    if (isNaN(seconds)) seconds = fallback;
+    seconds = Math.max(0, Math.min(60 * 60, seconds));
+    s.timerKind = seconds > 0 ? kind : null;
+    s.timerEnd = seconds > 0 ? Date.now() + seconds * 1000 : null;
+  }
+
   function applyIntent(s, intent) {
     if (!intent || typeof intent.type !== "string") return s;
     switch (intent.type) {
@@ -281,16 +297,24 @@
       case "donePsychic":
         if (s.phase === "psychic") s.phase = "dial";
         break;
+      case "startDialTimer":
+        if (s.phase === "psychic") startTimer(s, "dial", intent.timerSeconds, 60);
+        break;
       case "setDial":
         if (s.phase === "dial") s.dial = clampDial(intent.value);
         break;
       case "lock":
-        if (s.phase === "dial") s.phase = "guess";
+        if (s.phase === "dial") {
+          s.phase = "guess";
+          startTimer(s, "guess", intent.timerSeconds, 15);
+        }
         break;
       case "guess":
         if (s.phase === "guess" && (intent.guess === "L" || intent.guess === "R")) {
           s.guess = intent.guess;
           s.phase = "reveal";
+          s.timerKind = null;
+          s.timerEnd = null;
         }
         break;
       case "reveal":
@@ -321,6 +345,8 @@
           s.target = newTarget(s);
           s.dial = UNIT / 2;
           s.guess = null;
+          s.timerKind = null;
+          s.timerEnd = null;
         }
         break;
       case "setOrdered":

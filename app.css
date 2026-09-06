@@ -24,7 +24,7 @@
   .wrap { width: 100%; max-width: 920px; }
 
   header {
-    display: flex; align-items: center; justify-content: space-between;
+    position: relative; display: flex; align-items: center; justify-content: space-between;
     padding-bottom: 14px; border-bottom: 1px solid var(--line);
     margin-bottom: 18px;
   }
@@ -34,6 +34,33 @@
     -webkit-background-clip: text; background-clip: text; color: transparent;
   }
   header .sub { color: var(--dim); font-size: 12px; margin-top: 2px; }
+  .timer-display {
+    margin-left: auto;
+    margin-right: 14px;
+    min-width: 92px;
+    padding: 6px 12px;
+    border: 1px solid rgba(255, 209, 102, .55);
+    border-radius: 10px;
+    background: rgba(255, 209, 102, .08);
+    color: var(--gold);
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-size: 25px;
+    font-weight: 800;
+    line-height: 1;
+    text-align: center;
+    letter-spacing: 1px;
+    font-variant-numeric: tabular-nums;
+  }
+  .timer-display.hidden { display: none; }
+  .timer-display.warning,
+  .timer-display.expired {
+    border-color: #ff5555;
+    background: rgba(255, 70, 70, .18);
+    color: #ff5555;
+    text-shadow: 0 0 12px rgba(255, 70, 70, .7);
+  }
+  .timer-display.warning { animation: timer-pulse .7s ease-in-out infinite alternate; }
+  @keyframes timer-pulse { to { background: rgba(255, 70, 70, .32); transform: scale(1.04); } }
   .btn {
     background: var(--panel2); color: var(--txt);
     border: 1px solid var(--line); border-radius: 10px;
@@ -160,6 +187,22 @@
     transform: translateX(-50%);
     background: rgba(180, 172, 225, .5);
   }
+  .tick-mark.major { width: 2px; background: rgba(220, 215, 245, .78); }
+  .tick-number {
+    position: absolute;
+    top: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: rgba(235, 231, 255, .9);
+    font-size: 9px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, .8);
+  }
+  .tick-mark.edge-left .tick-number { left: 3px; transform: none; }
+  .tick-mark.edge-right .tick-number { left: -3px; transform: translateX(-100%); }
   .screen {
     position: absolute; inset: 0; border-radius: 20px; z-index: 3;
     background:
@@ -335,6 +378,20 @@
     }
     body.monitor-mode header h1 { font-size: clamp(18px, 4.5vh, 30px); }
     body.monitor-mode header .sub { font-size: clamp(9px, 2vh, 14px); }
+    body.monitor-mode .timer-display {
+      position: absolute;
+      left: 50%;
+      top: 0;
+      transform: translateX(-50%);
+      margin: 0;
+      min-width: clamp(76px, 5vw, 112px);
+      padding: clamp(5px, 1.2vh, 8px) 14px;
+      font-size: clamp(20px, 4.5vh, 31px);
+    }
+    body.monitor-mode .timer-display.warning { animation-name: timer-pulse-monitor; }
+    @keyframes timer-pulse-monitor {
+      to { background: rgba(255, 70, 70, .32); transform: translateX(-50%) scale(1.04); }
+    }
     body.monitor-mode .banner {
       position: fixed;
       z-index: 45;
@@ -438,6 +495,7 @@
     body.monitor-mode .dial .needle { width: clamp(4px, 1vh, 7px); height: clamp(52px, 14.5vh, 98px); }
     body.monitor-mode .center-mark { top: -12px; width: 22px; height: 22px; }
     body.monitor-mode .band-label { font-size: 15px; padding: 3px 7px; }
+    body.monitor-mode .tick-number { top: 5px; font-size: clamp(10px, 2.2vh, 15px); }
     body.monitor-mode .spectrum-labels { margin-top: clamp(5px, 1.8vh, 12px); font-size: clamp(13px, 3.2vh, 22px); }
     body.monitor-mode .controls { display: none; }
     body.monitor-mode .score-pop {
@@ -537,4 +595,11 @@
       margin: 0 0 22px;
       padding-left: 8px;
     }
+  }
+
+  @media (max-width: 600px) {
+    header h1 { font-size: 20px; }
+    header .sub { font-size: 10px; }
+    header > .btn { padding: 8px 10px; font-size: 13px; }
+    .timer-display { min-width: 70px; margin-right: 8px; padding: 5px 7px; font-size: 18px; }
   }

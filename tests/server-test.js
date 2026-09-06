@@ -90,13 +90,21 @@ function latestSnapshot() {
   assert(latestSnapshot().phase === "psychic", "invalid intent (lock in psychic) ignored");
 
   await req("POST", base + "/api/intent", { type: "selectSide", side: 0 });
+  await req("POST", base + "/api/intent", { type: "startDialTimer", timerSeconds: 60 });
   await req("POST", base + "/api/intent", { type: "donePsychic" });
+  await sleep(50);
+  s = latestSnapshot();
+  assert(s.timerKind === "dial" && s.timerEnd > Date.now(), "dial timer synced and continues after psychic closes target");
   await req("POST", base + "/api/intent", { type: "setDial", value: 750 });
-  await req("POST", base + "/api/intent", { type: "lock" });
+  await req("POST", base + "/api/intent", { type: "lock", timerSeconds: 15 });
+  await sleep(50);
+  s = latestSnapshot();
+  assert(s.phase === "guess" && s.timerKind === "guess" && s.timerEnd > Date.now(), "guess timer starts after dial locks");
   await req("POST", base + "/api/intent", { type: "guess", guess: "R" });
   await sleep(100);
   s = latestSnapshot();
   assert(s.phase === "reveal" && s.dial === 750 && s.guess === "R", "round state synced to reveal");
+  assert(s.timerKind === null && s.timerEnd === null, "timer clears after left/right choice");
 
   await req("POST", base + "/api/intent", { type: "reveal" });
   await sleep(100);

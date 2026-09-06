@@ -50,6 +50,23 @@ function postIntent(port, intent) {
     bottom: el.getBoundingClientRect().bottom
   }));
   assert(guessPromptFit.scrollHeight <= guessPromptFit.clientHeight && guessPromptFit.bottom <= 672, "long left/right prompt stays inside its grid area");
+  const timerAndTicks = await page.evaluate(() => {
+    const timer = document.getElementById("timer-display").getBoundingClientRect();
+    const axis = document.getElementById("axis").getBoundingClientRect();
+    const tickLabels = Array.from(document.querySelectorAll("#ticks .tick-number"));
+    return {
+      timerText: document.getElementById("timer-display").textContent,
+      timerTop: timer.top,
+      timerBottom: timer.bottom,
+      tickLabels: tickLabels.map((el) => el.textContent),
+      ticksFit: tickLabels.every((el) => {
+        const r = el.getBoundingClientRect();
+        return r.left >= axis.left && r.right <= axis.right;
+      })
+    };
+  });
+  assert(["00:15", "00:14"].includes(timerAndTicks.timerText) && timerAndTicks.timerTop >= 0 && timerAndTicks.timerBottom <= 672, "guess timer is visible inside the ultra-wide display");
+  assert(timerAndTicks.tickLabels.join(",") === "0%,25%,50%,75%,100%" && timerAndTicks.ticksFit, "percentage tick labels fit the ultra-wide axis");
   await postIntent(port, { type: "guess", guess: "R" });
   await page.waitForSelector(".guess-choice");
 
