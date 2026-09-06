@@ -131,7 +131,7 @@ function latestSnapshot() {
   await sleep(100);
   s = latestSnapshot();
   assert(s.ordered === true, "ordered flag synced");
-  assert(s.winScore === 0, "win score 0 (unlimited) synced");
+  assert(s.winScore === 0, "win score 0 (no score threshold) synced");
 
   await req("POST", base + "/api/intent", { type: "setWinScore", value: -5 });
   await sleep(100);

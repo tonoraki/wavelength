@@ -77,7 +77,7 @@
       <li>对方猜：目标的中心楔形在拨杆左边还是右边。</li>
       <li>揭示：本队拨杆落在目标色带内得 2/3/4 分；对方猜对左右得 1 分（本队 4 分时对方不得分）。</li>
       <li>追赶规则：本队拿 4 分且仍然落后，立刻再行动一轮。</li>
-      <li>获胜：先到设定分（高级选项可改，默认 10，填 0 为无上限）获胜；分数高者胜。</li>
+      <li>获胜：先达到设定分，或第 10 局结束时分数较高者获胜；届时平分则进入加时赛。</li>
       <li>平分加时赛：两队各出一次题，比较该回合各自得分（含左右猜测的 1 分），谁高谁赢；仍平则重复，直到分出胜负。加时回合不计入主记分板。</li>
       <li>出题禁忌：禁用卡片上的词/同义词、数字、复合线索、自造事物。</li>
     </ul>
@@ -110,7 +110,7 @@
 <div class="modal-mask" id="setup-modal">
   <div class="modal">
     <h2 id="setup-title">🎧 Wavelength</h2>
-    <p>两队轮流派出一位「Psychic」出题，本队猜目标位置，对方猜左右。先拿 10 分获胜。</p>
+    <p>两队轮流派出一位「Psychic」出题，本队猜目标位置，对方猜左右。先拿 10 分或 10 局后领先者获胜。</p>
     <div class="field-row">
       <div class="field">
         <label>蓝队名称（先手 0 分）</label>
@@ -176,22 +176,17 @@
           <label class="check-row"><input type="checkbox" id="opt-ordered"> 按顺序展示（不洗牌，抽完循环）</label>
         </div>
         <div class="field">
-          <label>获胜分数（0 = 无上限）</label>
+          <label>获胜分数（0 = 不设分数门槛，仍最多 10 局）</label>
           <input type="number" id="opt-winscore" min="0" max="999" value="10">
         </div>
         <div class="field">
           <label>色带总宽</label>
-          <input type="number" id="opt-bandwidth" min="2" max="200" step="1" value="36">
+          <input type="number" id="opt-bandwidth" min="2" max="200" step="1" value="40">
         </div>
       </div>
       <div class="field">
-        <label>目标分布（两端/中心/中段 频率）</label>
-        <select id="opt-dist">
-          <option value="uniform">均匀</option>
-          <option value="mild">适中（两端 1.2 / 中心 0.9 / 谷 0.65）</option>
-          <option value="recommended" selected>推荐（两端 1.5 / 中心 0.9 / 谷 0.50）</option>
-          <option value="strong">明显（两端 1.8 / 中心 0.9 / 谷 0.35）</option>
-        </select>
+        <label>目标分布（固定公平模式）</label>
+        <div class="setting-note">第 1 局适中 · 第 2 局明显 · 第 3 局及以后推荐</div>
       </div>
     </details>
     <button class="btn primary" id="btn-start" style="width:100%">开始游戏</button>

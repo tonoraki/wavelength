@@ -324,6 +324,10 @@
     background: var(--panel2); border: 1px solid var(--line);
     border-radius: 8px; padding: 9px 12px; text-align: left;
   }
+  .setting-note {
+    color: var(--txt); background: var(--panel2); border: 1px solid var(--line);
+    border-radius: 8px; padding: 9px 12px; font-size: 13px; line-height: 1.5;
+  }
   .deck-msg { font-size: 12px; margin-top: 6px; min-height: 16px; color: var(--dim); }
   .deck-msg.ok { color: var(--cyan); }
   .deck-msg.err { color: var(--magenta); }

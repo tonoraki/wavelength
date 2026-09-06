@@ -52,11 +52,52 @@ for (const [name, dist] of [["mild", "mild"], ["recommended", "recommended"], ["
 const t = WL.newTarget({ dist: "recommended" });
 assert(t.center >= 0 && t.center <= 1000, "target center within [0,1000]");
 assert(t.center + t.w4 >= 0 && t.center - t.w4 <= 1000, "4-point wedge always at least partially on bar");
-assert(t.w4 === 18 && t.w3 === 54 && t.w2 === 90, "default band widths total 36 (18/54/90)");
-assert(t.w3 - t.w4 === 2 * t.w4 && t.w2 - t.w3 === 2 * t.w4, "4/3/2 band widths equal (36 each)");
+assert(t.w4 === 20 && t.w3 === 60 && t.w2 === 100, "default band widths total 40 (20/60/100)");
+assert(t.w3 - t.w4 === 2 * t.w4 && t.w2 - t.w3 === 2 * t.w4, "4/3/2 band widths equal (40 each)");
 const t2 = WL.newTarget({ dist: "uniform", bandWidth: 25 });
 assert(t2.w4 === 12.5 && t2.w3 === 37.5 && t2.w2 === 62.5, "bandWidth override honored (25)");
-assert(WL.BAND_WIDTH === 36, "BAND_WIDTH default exported as 36");
+assert(WL.BAND_WIDTH === 40, "BAND_WIDTH default exported as 40");
+
+function finishPerfectRound(game) {
+  WL.applyIntent(game, { type: "donePsychic" });
+  WL.applyIntent(game, { type: "setDial", value: game.target.center });
+  WL.applyIntent(game, { type: "lock" });
+  WL.applyIntent(game, { type: "guess", guess: "L" });
+  WL.applyIntent(game, { type: "reveal" });
+}
+
+const scheduled = WL.createGame();
+WL.applyIntent(scheduled, { type: "setWinScore", value: 0 });
+WL.applyIntent(scheduled, { type: "setup", teamA: "先手", teamB: "后手", first: "A" });
+assert(scheduled.round === 1 && scheduled.target.dist === "mild", "round 1 uses mild target distribution");
+finishPerfectRound(scheduled);
+WL.applyIntent(scheduled, { type: "nextRound" });
+assert(scheduled.round === 2 && scheduled.active === "B" && scheduled.target.dist === "strong", "round 2 gives the later team the strong distribution");
+finishPerfectRound(scheduled);
+WL.applyIntent(scheduled, { type: "nextRound" });
+assert(scheduled.round === 3 && scheduled.target.dist === "recommended", "round 3 uses recommended target distribution");
+for (;;) {
+  finishPerfectRound(scheduled);
+  if (scheduled.phase === "over") break;
+  WL.applyIntent(scheduled, { type: "nextRound" });
+  assert(scheduled.target.dist === "recommended", `round ${scheduled.round} keeps recommended target distribution`);
+}
+assert(scheduled.round === WL.MAX_ROUNDS && scheduled.result.winner === "B" && scheduled.result.maxRounds, "round 10 ends an unlimited-score game with the higher score winning");
+
+const tiedAtTen = WL.createGame();
+WL.applyIntent(tiedAtTen, { type: "setWinScore", value: 0 });
+WL.applyIntent(tiedAtTen, { type: "setup", teamA: "甲", teamB: "乙", first: "A" });
+tiedAtTen.round = WL.MAX_ROUNDS;
+tiedAtTen.active = "B";
+tiedAtTen.phase = "reveal";
+tiedAtTen.teams.A.score = 5;
+tiedAtTen.teams.B.score = 5;
+tiedAtTen.target = { center: 0, w4: 20, w3: 60, w2: 100, dist: "recommended" };
+tiedAtTen.dial = 500;
+tiedAtTen.guess = "R";
+WL.applyIntent(tiedAtTen, { type: "reveal" });
+assert(tiedAtTen.phase === "revealed" && tiedAtTen.sudden && tiedAtTen.result === null, "a tie after round 10 enters sudden death");
+assert(WL.MAX_ROUNDS === 10, "MAX_ROUNDS is fixed at 10");
 
 console.log("DIST TEST PASSED");
 process.exit(0);

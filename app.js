@@ -677,7 +677,6 @@
     if (showSetup) {
       $("opt-ordered").checked = !!G.ordered;
       $("opt-winscore").value = G.winScore;
-      $("opt-dist").value = G.dist || WL.DIST_DEFAULT;
       $("opt-bandwidth").value = G.bandWidth;
     }
 
@@ -691,7 +690,7 @@
       var w = G.teams[G.result.winner];
       $("winner-text").textContent = "🏆 " + w.name + " 获胜！";
       $("winner-text").className = "winner " + (G.result.winner === "A" ? "a" : "b");
-      $("final-score").textContent = "蓝队（" + G.teams.A.name + "）" + G.teams.A.score + " 分　VS　粉队（" + G.teams.B.name + "）" + G.teams.B.score + " 分" + (G.result.sudden ? "（加时赛决出）" : "");
+      $("final-score").textContent = "蓝队（" + G.teams.A.name + "）" + G.teams.A.score + " 分　VS　粉队（" + G.teams.B.name + "）" + G.teams.B.score + " 分" + (G.result.sudden ? "（加时赛决出）" : G.result.maxRounds ? "（10 局结算）" : "");
     }
 
     var isMonitor = ROLE === "monitor";
@@ -957,9 +956,6 @@
     if (isNaN(v) || v < 0) v = 0;
     this.value = v;
     dispatch({ type: "setWinScore", value: v });
-  });
-  $("opt-dist").addEventListener("change", function () {
-    dispatch({ type: "setDist", value: this.value });
   });
   $("opt-bandwidth").addEventListener("change", function () {
     var v = Math.floor(Number(this.value));

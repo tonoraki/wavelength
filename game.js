@@ -54,8 +54,9 @@
   ];
 
   var UNIT = 1000;
-  var BAND_WIDTH = 36;
+  var BAND_WIDTH = 40;
   var WIN_SCORE = 10;
+  var MAX_ROUNDS = 10;
   var DIST_PRESETS = {
     uniform: { M: 1, E: 1, V: 1, U: 0.16, label: "均匀" },
     mild: { M: 0.9, E: 1.2, V: 0.65, U: 0.16, label: "适中" },
@@ -98,12 +99,19 @@
     }
   }
 
+  function targetDistForRound(round) {
+    if (round === 1) return "mild";
+    if (round === 2) return "strong";
+    return DIST_DEFAULT;
+  }
+
   function newTarget(s) {
     var bw = s && s.bandWidth > 0 ? s.bandWidth : BAND_WIDTH;
-    var u = sampleTargetX(s ? s.dist : DIST_DEFAULT);
+    var dist = s && s.round > 0 ? targetDistForRound(s.round) : (s && s.dist ? s.dist : DIST_DEFAULT);
+    var u = sampleTargetX(dist);
     var c = Math.round(500 + 1000 * u);
     c = Math.max(0, Math.min(1000, c));
-    return { center: c, w4: bw / 2, w3: bw * 1.5, w2: bw * 2.5 };
+    return { center: c, w4: bw / 2, w3: bw * 1.5, w2: bw * 2.5, dist: dist };
   }
 
   function drawFromDeck(s) {
@@ -130,7 +138,6 @@
       deck: [],
       ordered: false,
       winScore: WIN_SCORE,
-      dist: DIST_DEFAULT,
       bandWidth: BAND_WIDTH,
       sudden: false,
       sdPts: { A: 0, B: 0 },
@@ -253,7 +260,8 @@
     var limit = s.winScore > 0 ? s.winScore : Infinity;
     var aWon = s.teams.A.score >= limit;
     var bWon = s.teams.B.score >= limit;
-    if (aWon || bWon) {
+    var maxRoundsReached = s.round >= MAX_ROUNDS;
+    if (aWon || bWon || maxRoundsReached) {
       if (s.teams.A.score === s.teams.B.score) {
         s.sudden = true;
         s.sdPts.A = 0;
@@ -262,7 +270,10 @@
         s.sdTurns.B = false;
         s.phase = "revealed";
       } else {
-        s.result = { winner: s.teams.A.score > s.teams.B.score ? "A" : "B" };
+        s.result = {
+          winner: s.teams.A.score > s.teams.B.score ? "A" : "B",
+          maxRounds: maxRoundsReached && !aWon && !bWon
+        };
         s.phase = "over";
       }
       return;
@@ -357,9 +368,6 @@
         if (isNaN(ws) || ws < 0) ws = 0;
         s.winScore = ws;
         break;
-      case "setDist":
-        if (DIST_PRESETS[intent.value]) s.dist = intent.value;
-        break;
       case "setBandWidth":
         var bw = Math.floor(Number(intent.value));
         if (isNaN(bw) || bw < 2) bw = BAND_WIDTH;
@@ -428,11 +436,13 @@
     UNIT: UNIT,
     BAND_WIDTH: BAND_WIDTH,
     WIN_SCORE: WIN_SCORE,
+    MAX_ROUNDS: MAX_ROUNDS,
     DECK_NAME_DEFAULT: DECK_NAME_DEFAULT,
     DIST_PRESETS: DIST_PRESETS,
     DIST_DEFAULT: DIST_DEFAULT,
     distDensity: distDensity,
     sampleTargetX: sampleTargetX,
+    targetDistForRound: targetDistForRound,
     newTarget: newTarget,
     createGame: createGame,
     applyIntent: applyIntent,
