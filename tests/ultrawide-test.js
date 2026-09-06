@@ -53,12 +53,13 @@ function postIntent(port, intent) {
   const timerAndTicks = await page.evaluate(() => {
     const timer = document.getElementById("timer-display").getBoundingClientRect();
     const axis = document.getElementById("axis").getBoundingClientRect();
-    const tickLabels = Array.from(document.querySelectorAll("#ticks .tick-number"));
+    const tickLabels = Array.from(document.querySelectorAll("#tick-labels .tick-number"));
     return {
       timerText: document.getElementById("timer-display").textContent,
       timerTop: timer.top,
       timerBottom: timer.bottom,
       tickLabels: tickLabels.map((el) => el.textContent),
+      labelsBelow: tickLabels.every((el) => el.getBoundingClientRect().top >= axis.bottom),
       ticksFit: tickLabels.every((el) => {
         const r = el.getBoundingClientRect();
         return r.left >= axis.left && r.right <= axis.right;
@@ -66,7 +67,7 @@ function postIntent(port, intent) {
     };
   });
   assert(["00:15", "00:14"].includes(timerAndTicks.timerText) && timerAndTicks.timerTop >= 0 && timerAndTicks.timerBottom <= 672, "guess timer is visible inside the ultra-wide display");
-  assert(timerAndTicks.tickLabels.join(",") === "0%,25%,50%,75%,100%" && timerAndTicks.ticksFit, "percentage tick labels fit the ultra-wide axis");
+  assert(timerAndTicks.tickLabels.join(",") === "0%,25%,50%,75%,100%" && timerAndTicks.labelsBelow && timerAndTicks.ticksFit, "percentage tick labels fit below the ultra-wide axis");
   await postIntent(port, { type: "guess", guess: "R" });
   await page.waitForSelector(".guess-choice");
 

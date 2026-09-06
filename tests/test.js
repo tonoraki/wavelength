@@ -93,8 +93,8 @@ async function pickFile(name, content, inputId) {
   assert(sides.length >= 1 && sides.length <= 2, "card rendered");
   assert(doc.getElementById("trackA").children.length === 40, "win score 100 caps score dots at 40");
   const tickPositions = Array.from(doc.querySelectorAll("#ticks .tick-mark")).map((el) => parseFloat(el.style.left));
-  assert(tickPositions.length === 21 && tickPositions.every((x, i) => x === i * 5), "ticks use fixed 5% spacing from 0% to 100%");
-  assert(Array.from(doc.querySelectorAll("#ticks .tick-number")).map((el) => el.textContent).join(",") === "0%,25%,50%,75%,100%", "major ticks show percentage labels");
+  assert(tickPositions.length === 19 && tickPositions.every((x, i) => x === (i + 1) * 5), "ticks use fixed 5% spacing without endpoint lines");
+  assert(Array.from(doc.querySelectorAll("#tick-labels .tick-number")).map((el) => el.textContent).join(",") === "0%,25%,50%,75%,100%", "percentage labels render below the bar");
 
   const skipBtn = Array.from(doc.getElementById("controls").children).find((b) => b.textContent.indexOf("跳过此题") !== -1);
   assert(!!skipBtn, "skip button present in psychic phase");

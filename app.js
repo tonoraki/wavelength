@@ -452,21 +452,25 @@
 
   function renderTicks() {
     var box = $("ticks");
+    var labelBox = $("tick-labels");
     box.innerHTML = "";
+    labelBox.innerHTML = "";
     function addTick(position, major) {
       var tick = document.createElement("i");
-      tick.className = "tick-mark" + (major ? " major" : "") +
-        (position === 0 ? " edge-left" : position === 100 ? " edge-right" : "");
+      tick.className = "tick-mark" + (major ? " major" : "");
       tick.style.left = position + "%";
-      if (major) {
-        var label = document.createElement("span");
-        label.className = "tick-number";
-        label.textContent = position + "%";
-        tick.appendChild(label);
-      }
       box.appendChild(tick);
     }
-    for (var position = 0; position <= 100; position += 5) addTick(position, position % 25 === 0);
+    function addLabel(position) {
+      var label = document.createElement("span");
+      label.className = "tick-number" +
+        (position === 0 ? " edge-left" : position === 100 ? " edge-right" : "");
+      label.style.left = position + "%";
+      label.textContent = position + "%";
+      labelBox.appendChild(label);
+    }
+    for (var position = 5; position < 100; position += 5) addTick(position, position % 25 === 0);
+    for (var labelPosition = 0; labelPosition <= 100; labelPosition += 25) addLabel(labelPosition);
   }
 
   function renderBands() {

@@ -188,10 +188,15 @@
     background: rgba(180, 172, 225, .5);
   }
   .tick-mark.major { width: 2px; background: rgba(220, 215, 245, .78); }
+  .tick-label-row {
+    position: relative;
+    height: 18px;
+    margin-top: 5px;
+    pointer-events: none;
+  }
   .tick-number {
     position: absolute;
-    top: 2px;
-    left: 50%;
+    top: 0;
     transform: translateX(-50%);
     color: rgba(235, 231, 255, .9);
     font-size: 9px;
@@ -201,8 +206,8 @@
     white-space: nowrap;
     text-shadow: 0 1px 3px rgba(0, 0, 0, .8);
   }
-  .tick-mark.edge-left .tick-number { left: 3px; transform: none; }
-  .tick-mark.edge-right .tick-number { left: -3px; transform: translateX(-100%); }
+  .tick-number.edge-left { transform: none; }
+  .tick-number.edge-right { transform: translateX(-100%); }
   .screen {
     position: absolute; inset: 0; border-radius: 20px; z-index: 3;
     background:
@@ -495,8 +500,9 @@
     body.monitor-mode .dial .needle { width: clamp(4px, 1vh, 7px); height: clamp(52px, 14.5vh, 98px); }
     body.monitor-mode .center-mark { top: -12px; width: 22px; height: 22px; }
     body.monitor-mode .band-label { font-size: 15px; padding: 3px 7px; }
-    body.monitor-mode .tick-number { top: 5px; font-size: clamp(10px, 2.2vh, 15px); }
-    body.monitor-mode .spectrum-labels { margin-top: clamp(5px, 1.8vh, 12px); font-size: clamp(13px, 3.2vh, 22px); }
+    body.monitor-mode .tick-label-row { height: clamp(15px, 3vh, 21px); margin-top: clamp(3px, .8vh, 6px); }
+    body.monitor-mode .tick-number { font-size: clamp(10px, 2.2vh, 15px); }
+    body.monitor-mode .spectrum-labels { margin-top: clamp(2px, .7vh, 5px); font-size: clamp(13px, 3.2vh, 22px); }
     body.monitor-mode .controls { display: none; }
     body.monitor-mode .score-pop {
       grid-column: 2;
