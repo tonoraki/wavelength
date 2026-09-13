@@ -141,6 +141,8 @@ function click(doc, id) {
   assert(gdoc.getElementById("conn-badge").textContent.indexOf("本地模式") !== -1, "guest badge shows local mode");
   gdoc.getElementById("select-first").value = "A";
   click(gdoc, "btn-start");
+  await waitFor(() => gdoc.querySelectorAll(".card-choice").length === 2, "guest receives default two-card choice");
+  click(gdoc, gdoc.querySelector(".card-choice"));
   await waitFor(() => gdoc.getElementById("hint").textContent.indexOf("查看目标") !== -1, "guest can play a full local round");
   console.log("ok: guest plays local hot-seat without password");
 

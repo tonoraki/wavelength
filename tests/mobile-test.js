@@ -45,6 +45,13 @@ function assert(cond, msg) {
   assert(visibleNow, "start button scrollable into view on phone");
 
   await page.evaluate(() => document.getElementById("btn-start").click());
+  await page.waitForSelector(".card-choice");
+  const choicesFit = await page.$$eval(".card-choice", (els) => els.length === 2 && els.every((el) => {
+    const r = el.getBoundingClientRect();
+    return r.left >= 0 && r.right <= innerWidth && el.scrollWidth <= el.clientWidth;
+  }));
+  assert(choicesFit, "both candidate topics fit the phone width");
+  await page.click(".card-choice");
   await new Promise((r) => setTimeout(r, 500));
   const hint = await page.evaluate(() => document.getElementById("hint").textContent);
   assert(hint.indexOf("查看目标") !== -1, "game started after scrolling + tapping start");

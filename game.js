@@ -111,14 +111,22 @@
     var u = sampleTargetX(dist);
     var c = Math.round(500 + 1000 * u);
     c = Math.max(0, Math.min(1000, c));
-    return { center: c, w4: bw / 2, w3: bw * 1.5, w2: bw * 2.5, dist: dist };
+    // Half of the 4-point band, then one full 3-point and 2-point band.
+    var w4 = bw * 0.4;
+    var w3 = w4 + bw;
+    return { center: c, w4: w4, w3: w3, w2: w3 + bw * 1.1, dist: dist };
   }
 
-  function drawFromDeck(s) {
-    if (s.deck.length === 0) {
-      s.deck = s.ordered ? s.cards.slice() : shuffle(s.cards.slice());
+  function drawFromDeck(s, exclude) {
+    var excluded = exclude ? JSON.stringify(exclude) : null;
+    // Refill at most once; a one-topic deck still offers a playable choice.
+    for (var pass = 0; pass < 2; pass++) {
+      for (var i = s.deck.length - 1; i >= 0; i--) {
+        if (JSON.stringify(s.deck[i]) !== excluded) return s.deck.splice(i, 1)[0];
+      }
+      if (pass === 0) s.deck = s.ordered ? s.cards.slice() : shuffle(s.cards.slice());
     }
-    return s.deck.pop();
+    return null;
   }
 
   function createGame() {
@@ -131,6 +139,8 @@
       dial: UNIT / 2,
       target: null,
       card: null,
+      cardChoices: [],
+      cardMode: "choice",
       side: 0,
       guess: null,
       cards: BUILTIN_DECK.slice(),
@@ -153,10 +163,25 @@
 
   function startRound(s) {
     s.round++;
-    s.phase = "psychic";
-    s.card = drawFromDeck(s);
+    drawRoundCards(s);
+  }
+
+  function drawRoundCards(s) {
+    s.cardChoices = [];
+    var firstCard = drawFromDeck(s);
+    if (s.cardMode === "choice") {
+      s.phase = "chooseCard";
+      s.card = null;
+      s.target = null;
+      s.cardChoices.push(firstCard);
+      var secondCard = drawFromDeck(s, firstCard);
+      if (secondCard) s.cardChoices.push(secondCard);
+    } else {
+      s.phase = "psychic";
+      s.card = firstCard;
+      s.target = newTarget(s);
+    }
     s.side = 0;
-    s.target = newTarget(s);
     s.dial = UNIT / 2;
     s.guess = null;
     s.reveal = null;
@@ -165,6 +190,7 @@
   }
 
   function doSetup(s, intent) {
+    if (intent.cardMode === "choice" || intent.cardMode === "single") s.cardMode = intent.cardMode;
     s.teams.A = { name: intent.teamA || "左脑", score: 0 };
     s.teams.B = { name: intent.teamB || "右脑", score: 1 };
     if (intent.first === "B") {
@@ -204,6 +230,10 @@
     s.timerEnd = null;
     s.log = [];
     s.phase = "setup";
+    s.card = null;
+    s.cardChoices = [];
+    s.target = null;
+    s.side = 0;
   }
 
   function doReveal(s) {
@@ -302,8 +332,19 @@
       case "newGame":
         doNewGame(s);
         break;
+      case "selectCard":
+        if (s.phase === "chooseCard" && Number.isInteger(intent.index) &&
+            intent.index >= 0 && intent.index < s.cardChoices.length) {
+          s.card = s.cardChoices[intent.index];
+          s.cardChoices = [];
+          s.side = 0;
+          s.target = newTarget(s);
+          s.phase = "psychic";
+        }
+        break;
       case "selectSide":
-        if (s.phase === "psychic") s.side = intent.side === 1 ? 1 : 0;
+        if (s.phase === "psychic" && Number.isInteger(intent.side) &&
+            intent.side >= 0 && intent.side < cardSides(s.card).length) s.side = intent.side;
         break;
       case "donePsychic":
         if (s.phase === "psychic") s.phase = "dial";
@@ -351,13 +392,12 @@
         break;
       case "skipCard":
         if (s.phase === "psychic") {
-          s.card = drawFromDeck(s);
-          s.side = 0;
-          s.target = newTarget(s);
-          s.dial = UNIT / 2;
-          s.guess = null;
-          s.timerKind = null;
-          s.timerEnd = null;
+          drawRoundCards(s);
+        }
+        break;
+      case "setCardMode":
+        if (s.phase === "setup" && (intent.value === "choice" || intent.value === "single")) {
+          s.cardMode = intent.value;
         }
         break;
       case "setOrdered":

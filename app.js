@@ -423,16 +423,50 @@
 
   function renderCard() {
     var c = G.card;
-    if (!c) return;
-    $("card-label").textContent = "第 " + G.round + " " + T("roundUnit") + " · " + G.teams[G.active].name + " 的 " + T("psychic") + " 读卡";
     var box = $("sides");
     box.innerHTML = "";
+    box.classList.toggle("choosing", G.phase === "chooseCard");
+    $("card-frame").classList.toggle("choosing", G.phase === "chooseCard");
+    var label = "第 " + G.round + " " + T("roundUnit") + " · " + G.teams[G.active].name + " 的 " + T("psychic");
+    if (G.phase === "chooseCard") {
+      $("card-label").textContent = label + " 选题";
+      G.cardChoices.forEach(function (card, index) {
+        var b = document.createElement("button");
+        b.className = "side card-choice" + (G.cardChoices.length === 1 ? " only" : "");
+        b.type = "button";
+        var tag = document.createElement("span");
+        tag.className = "side-tag";
+        tag.textContent = "题目 " + (index + 1);
+        b.appendChild(tag);
+        WL.cardSides(card).forEach(function (pair) { b.appendChild(cardPair(pair)); });
+        var action = document.createElement("span");
+        action.className = "choice-action";
+        action.textContent = canControl() ? "选择这道题 →" : "等待控制器选择";
+        b.appendChild(action);
+        if (canControl()) {
+          b.onclick = function () {
+            psychicViewing = false;
+            dispatch({ type: "selectCard", index: index });
+          };
+        } else {
+          b.classList.add("readonly");
+          b.setAttribute("aria-disabled", "true");
+        }
+        box.appendChild(b);
+      });
+      return;
+    }
+    if (!c) {
+      $("card-label").textContent = "等待开始游戏";
+      return;
+    }
+    $("card-label").textContent = label + " 读卡";
     var opts = WL.cardSides(c);
     opts.forEach(function (pair, i) {
       var b = document.createElement("button");
       b.className = "side" + (i === G.side ? " selected" : "") + (opts.length === 1 ? " only" : "");
-      b.innerHTML = "<span class='side-tag'>" + (opts.length === 1 ? "概念" : "面 " + (i === 0 ? "A" : "B")) + "</span>" +
-        "<span class='con'><span class='l'>" + pair[0] + "</span><i>—</i><span class='r'>" + pair[1] + "</span></span>";
+      b.innerHTML = "<span class='side-tag'>" + (opts.length === 1 ? "概念" : "面 " + (i === 0 ? "A" : "B")) + "</span>";
+      b.appendChild(cardPair(pair));
       if (G.phase === "psychic") {
         if (canControl()) {
           b.onclick = function () { dispatch({ type: "selectSide", side: i }); };
@@ -446,8 +480,17 @@
     });
   }
 
+  function cardPair(pair) {
+    var con = document.createElement("span");
+    con.className = "con";
+    con.innerHTML = "<span class='l'></span><i>—</i><span class='r'></span>";
+    con.querySelector(".l").textContent = pair[0];
+    con.querySelector(".r").textContent = pair[1];
+    return con;
+  }
+
   function targetVisible() {
-    return psychicViewing || G.phase === "revealed" || G.phase === "over";
+    return (G.phase === "psychic" && psychicViewing) || G.phase === "revealed" || G.phase === "over";
   }
 
   function renderTicks() {
@@ -536,6 +579,10 @@
         ? "等待控制器开始游戏…"
         : "填写队伍信息并点击「" + T("startBtn") + "」。";
       if (control) box.appendChild(mk(T("startBtn"), "primary", startGame));
+    } else if (G.phase === "chooseCard") {
+      hint.innerHTML = teamName(G.active, t.name) + " 的 " + T("psychic") +
+        (G.cardChoices.length > 1 ? "：从上方两道题中选择本轮题目，选定后继续出题。" : "：题库只有一道不同的题，点击上方题目后继续出题。") +
+        (ROLE === "monitor" ? " 等待控制器选择…" : "");
     } else if (G.phase === "psychic") {
       hint.innerHTML = teamName(G.active, t.name) + " 的 " + T("psychic") + " 步骤：选好卡片面 → 点击「查看" + T("target") + "」（<span class='warn'>请确保其他人没有偷看屏幕！</span>）→ 口述" + T("clue") + " → 关闭" + T("screen") + "，之后不能再说话。";
       if (control) {
@@ -676,6 +723,7 @@
     $("setup-modal").classList.toggle("hidden", !showSetup);
     if (showSetup) {
       $("opt-ordered").checked = !!G.ordered;
+      $("opt-card-mode").value = G.cardMode;
       $("opt-winscore").value = G.winScore;
       $("opt-bandwidth").value = G.bandWidth;
     }
@@ -720,7 +768,8 @@
     var nB = $("input-nameB").value.trim() || "右脑";
     var first = $("select-first").value;
     if (first === "R") first = Math.random() < 0.5 ? "A" : "B";
-    dispatch({ type: "setup", teamA: nA, teamB: nB, first: first });
+    psychicViewing = false;
+    dispatch({ type: "setup", teamA: nA, teamB: nB, first: first, cardMode: $("opt-card-mode").value });
   }
 
   function deckMsg(text, ok) {
@@ -948,6 +997,9 @@
   });
 
   $("btn-start").onclick = startGame;
+  $("opt-card-mode").addEventListener("change", function () {
+    dispatch({ type: "setCardMode", value: this.value });
+  });
   $("opt-ordered").addEventListener("change", function () {
     dispatch({ type: "setOrdered", value: this.checked });
   });

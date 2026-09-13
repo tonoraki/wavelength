@@ -30,6 +30,8 @@ function assert(cond, msg) {
   assert(await page.$eval("#setup-modal", (el) => el.className.indexOf("hidden") === -1), "setup modal shown for controller");
   await page.$eval("#select-first", (el) => { el.value = "A"; });
   await page.click("#btn-start");
+  await page.waitForSelector(".card-choice");
+  await page.click(".card-choice");
   await sleep(500);
 
   const hint = await page.$eval("#hint", (el) => el.textContent);
@@ -65,6 +67,8 @@ function assert(cond, msg) {
   console.log("ok: auto reconnected after server restart");
   await page.waitForSelector("#setup-modal:not(.hidden)", { timeout: 5000 });
   await page.evaluate(() => document.getElementById("btn-start").click());
+  await page.waitForSelector(".card-choice");
+  await page.click(".card-choice");
   await sleep(500);
   const hint3 = await page.$eval("#hint", (el) => el.textContent);
   assert(hint3.indexOf("Psychic") !== -1, "game works again after reconnect");

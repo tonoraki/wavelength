@@ -72,6 +72,7 @@
   <details class="rules">
     <summary><span class="rules-summary-label">规则速查</span></summary>
     <ul>
+      <li>默认「二选一」模式：每轮抽取两道题，出题人先选一道，再查看目标并给出线索；也可在开始前切换为「经典单题」。</li>
       <li>Psychic（出题人）看目标位置后，给一个落在卡片两个概念之间的线索，之后不能再说话。</li>
       <li>本队讨论后把金色拨杆拖到猜测位置并锁定。</li>
       <li>对方猜：目标的中心楔形在拨杆左边还是右边。</li>
@@ -129,6 +130,13 @@
         <option value="R" selected>随机</option>
       </select>
     </div>
+    <div class="field">
+      <label for="opt-card-mode">游戏模式</label>
+      <select id="opt-card-mode">
+        <option value="choice" selected>二选一：每轮抽两题，选一题（默认）</option>
+        <option value="single">经典单题：每轮抽一题</option>
+      </select>
+    </div>
     <details class="advanced">
       <summary>⚙ 高级选项</summary>
       <div class="field" id="deck-server" style="display:none">
@@ -180,7 +188,7 @@
           <input type="number" id="opt-winscore" min="0" max="999" value="10">
         </div>
         <div class="field">
-          <label>色带总宽</label>
+          <label>色带基准宽度（4 分 ×0.8 / 3 分 ×1 / 2 分 ×1.1）</label>
           <input type="number" id="opt-bandwidth" min="2" max="200" step="1" value="40">
         </div>
       </div>

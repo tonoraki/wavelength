@@ -39,6 +39,9 @@ function postIntent(port, intent) {
   await page.click("#btn-role-monitor");
   await postIntent(port, { type: "setup", teamA: "蓝队", teamB: "粉队", first: "A" });
   await page.waitForFunction(() => document.body.classList.contains("monitor-mode") && document.getElementById("sides").children.length > 0);
+  const choicesFit = await page.$$eval(".card-choice", (els) => els.length === 2 && els.every((el) => el.scrollWidth <= el.clientWidth && el.scrollHeight <= el.clientHeight));
+  assert(choicesFit, "two candidates fit the ultra-wide monitor card area");
+  await postIntent(port, { type: "selectCard", index: 0 });
   await postIntent(port, { type: "selectSide", side: 0 });
   await postIntent(port, { type: "donePsychic" });
   await postIntent(port, { type: "setDial", value: 600 });
@@ -121,6 +124,7 @@ function postIntent(port, intent) {
   await page.click("details.rules > summary");
   await postIntent(port, { type: "newGame" });
   await postIntent(port, { type: "setup", teamA: "超长名称蓝队", teamB: "超长名称粉队", first: "A" });
+  await postIntent(port, { type: "selectCard", index: 1 });
   await postIntent(port, { type: "selectSide", side: 0 });
   await postIntent(port, { type: "donePsychic" });
   await postIntent(port, { type: "setDial", value: 600 });
@@ -140,6 +144,22 @@ function postIntent(port, intent) {
   });
   assert(scaledLayout.scrollWidth <= 1952 && scaledLayout.scrollHeight <= 336, "layout also fits a 200%-scaled 3904x672 display");
   assert(scaledLayout.hintScrollHeight <= scaledLayout.hintClientHeight && scaledLayout.hintBottom <= 336, "long prompt remains contained under display scaling");
+
+  await postIntent(port, { type: "newGame" });
+  await postIntent(port, { type: "loadDeck", cards: [
+    ["讨好型人格", "反驳型人格", "太快乐了🤗", "太痛苦了😫"],
+    ["人类友好度高", "人类友好度低", "岁月静好", "负重前行"]
+  ] });
+  await postIntent(port, { type: "setup", first: "A" });
+  await page.waitForSelector(".card-choice");
+  for (const [width, height] of [[1952, 336], [3904, 672]]) {
+    await page.setViewport({ width, height, deviceScaleFactor: 1 });
+    const doubleChoicesFit = await page.$$eval(".card-choice", (els) => els.length === 2 && els.every((el) => {
+      const r = el.getBoundingClientRect();
+      return el.scrollHeight <= el.clientHeight && el.scrollWidth <= el.clientWidth && r.top >= 0 && r.bottom <= innerHeight;
+    }));
+    assert(doubleChoicesFit, `both sides of long candidate cards fit at ${width}x${height}`);
+  }
 
   if (process.argv.includes("--screenshot")) {
     await page.screenshot({ path: path.join(__dirname, "ultrawide-qa.png") });

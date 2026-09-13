@@ -39,6 +39,9 @@ function assert(cond, msg) {
 
   await page.$eval("#select-first", (el) => { el.value = "A"; });
   await page.click("#btn-start");
+  await page.waitForSelector(".card-choice");
+  assert(await page.$$eval(".card-choice", (els) => els.length) === 2, "static host offers two candidates by default");
+  await page.click(".card-choice");
   await page.waitForFunction(() => document.getElementById("hint").textContent.indexOf("查看目标") !== -1, { timeout: 5000 });
   console.log("ok: static host: game playable");
 

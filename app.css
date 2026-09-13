@@ -151,6 +151,13 @@
   .side:disabled { cursor: not-allowed; }
   .side.readonly { cursor: default; }
   .side.readonly:hover { border-color: var(--line); }
+  .card-choice { min-width: 0; }
+  .card-choice .con { overflow-wrap: anywhere; }
+  .card-choice .con span { min-width: 0; }
+  .card-choice .con + .con { margin-top: 8px; }
+  .choice-action { display: block; margin-top: 12px; color: var(--gold); font-size: 13px; }
+  .card-choice:not(.readonly):hover { border-color: var(--gold); background: #36294f; }
+  .side:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
 
   .spectrum-wrap { position: relative; margin: 30px 10px 40px; user-select: none; }
   .axis { position: relative; height: 34px; border-radius: 20px; overflow: hidden; }
@@ -455,6 +462,13 @@
     body.monitor-mode .side .side-tag { font-size: clamp(9px, 2.2vh, 15px); }
     body.monitor-mode .side .con { font-size: clamp(17px, min(1.8vw, 5vh), 38px); line-height: 1.15; overflow-wrap: anywhere; }
     body.monitor-mode .side .con i { font-size: clamp(13px, 3vh, 22px); padding: 0 clamp(6px, 1vw, 18px); }
+    body.monitor-mode .card-frame.choosing { padding: clamp(4px, 1.2vh, 8px) 20px; }
+    body.monitor-mode .card-frame.choosing .card-label { line-height: 1.1; margin-bottom: clamp(2px, .5vh, 4px); }
+    body.monitor-mode .card-choice { padding: clamp(3px, .7vh, 5px) 18px; }
+    body.monitor-mode .card-choice .side-tag { line-height: 1; margin-bottom: 3px; }
+    body.monitor-mode .card-choice .choice-action { display: none; }
+    body.monitor-mode .card-choice .con { font-size: clamp(14px, min(1.5vw, 3.6vh), 28px); }
+    body.monitor-mode .card-choice .con + .con { margin-top: 3px; }
     body.monitor-mode .phase-hint {
       grid-column: 2;
       grid-row: 3;
@@ -608,6 +622,7 @@
   }
 
   @media (max-width: 600px) {
+    .sides.choosing { grid-template-columns: minmax(0, 1fr); }
     header h1 { font-size: 20px; }
     header .sub { font-size: 10px; }
     header > .btn { padding: 8px 10px; font-size: 13px; }

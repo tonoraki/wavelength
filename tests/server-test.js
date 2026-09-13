@@ -82,6 +82,16 @@ function latestSnapshot() {
   assert(r.status === 200, "setup intent accepted");
   await sleep(100);
   let s = latestSnapshot();
+  assert(s.phase === "chooseCard" && s.cardChoices.length === 2 && s.target === null, "setup broadcasts two candidates without a target");
+  const chosen = s.cardChoices[1];
+  await req("POST", base + "/api/intent", { type: "selectCard", index: -1 });
+  await req("POST", base + "/api/intent", { type: "donePsychic" });
+  await sleep(50);
+  assert(latestSnapshot().phase === "chooseCard", "invalid selection and premature continuation ignored");
+  await req("POST", base + "/api/intent", { type: "selectCard", index: 1 });
+  await sleep(50);
+  s = latestSnapshot();
+  assert(JSON.stringify(s.card) === JSON.stringify(chosen) && s.cardChoices.length === 0, "selected card synced and candidates cleared");
   assert(s.phase === "psychic" && s.round === 1, "round 1 psychic after setup");
   assert(s.teams.A.score === 0 && s.teams.B.score === 1, "scores 0/1 synced");
 
@@ -116,15 +126,15 @@ function latestSnapshot() {
   await req("POST", base + "/api/intent", { type: "nextRound" });
   await sleep(100);
   s = latestSnapshot();
-  assert(s.phase === "psychic" && s.active === "B" && s.round === 2, "next round switched to B");
+  assert(s.phase === "chooseCard" && s.cardChoices.length === 2 && s.active === "B" && s.round === 2, "next round switched to B with two candidates");
   assert(s.reveal === null, "next round clears previous reveal result");
 
-  const beforeSkip = latestSnapshot().card;
+  await req("POST", base + "/api/intent", { type: "selectCard", index: 0 });
   await req("POST", base + "/api/intent", { type: "skipCard" });
   await sleep(100);
   s = latestSnapshot();
-  assert(s.phase === "psychic" && s.round === 2, "skip stays in psychic, round unchanged");
-  assert(JSON.stringify(s.card) !== JSON.stringify(beforeSkip), "skip draws a different card");
+  assert(s.phase === "chooseCard" && s.round === 2, "skip returns to selection, round unchanged");
+  assert(s.cardChoices.length === 2 && s.card === null && s.target === null, "skip broadcasts fresh candidates without a target");
 
   await req("POST", base + "/api/intent", { type: "setOrdered", value: true });
   await req("POST", base + "/api/intent", { type: "setWinScore", value: 0 });

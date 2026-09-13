@@ -99,6 +99,11 @@ function click(doc, id) {
   cdoc.getElementById("select-first").value = "A";
   click(cdoc, "btn-start");
 
+  await waitFor(() => mdoc.querySelectorAll(".card-choice").length === 2 && cdoc.querySelectorAll(".card-choice").length === 2, "both devices receive two candidates");
+  assert(mdoc.getElementById("sides").textContent === cdoc.getElementById("sides").textContent.replaceAll("选择这道题 →", "等待控制器选择"), "candidate topics match across devices");
+  click(mdoc, mdoc.querySelector(".card-choice"));
+  assert(mdoc.querySelectorAll(".card-choice").length === 2, "monitor cannot choose a card");
+  click(cdoc, cdoc.querySelectorAll(".card-choice")[1]);
   await waitFor(() => mdoc.getElementById("hint").textContent.indexOf("查看目标") !== -1, "monitor sees psychic phase");
   assert(cdoc.getElementById("scoreB").textContent === "1", "controller sees B score 1");
 
@@ -141,6 +146,7 @@ function click(doc, id) {
 
   click(cdoc, cdoc.getElementById("controls").children[0]);
   await waitFor(() => mdoc.getElementById("hint").textContent.indexOf("粉队") !== -1, "monitor turn switched to B");
+  await waitFor(() => mdoc.querySelectorAll(".card-choice").length === 2, "monitor receives next-round candidates");
 
   click(cdoc, cdoc.getElementById("btn-restart"));
   await waitFor(() => mdoc.getElementById("hint").textContent.indexOf("等待控制器开始游戏") !== -1, "monitor sees waiting hint after restart");

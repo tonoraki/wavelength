@@ -84,6 +84,11 @@ async function pickFile(name, content, inputId) {
   doc.getElementById("select-first").value = "A";
   click("btn-start");
 
+  assert(doc.getElementById("opt-card-mode").value === "choice", "two-choice mode is the default");
+  assert(doc.querySelectorAll(".card-choice").length === 2, "two candidate cards shown before psychic phase");
+  assert(doc.getElementById("controls").children.length === 0, "cannot view target before choosing a card");
+  assert(doc.getElementById("bands").children.length === 0, "no target rendered while choosing");
+  click(doc.querySelector(".card-choice"));
   assert(doc.getElementById("setup-modal").className.indexOf("hidden") !== -1, "setup modal closed");
   assert(doc.getElementById("scoreA").textContent === "0", "A starts at 0");
   assert(doc.getElementById("scoreB").textContent === "1", "B starts at 1");
@@ -99,6 +104,8 @@ async function pickFile(name, content, inputId) {
   const skipBtn = Array.from(doc.getElementById("controls").children).find((b) => b.textContent.indexOf("跳过此题") !== -1);
   assert(!!skipBtn, "skip button present in psychic phase");
   click(skipBtn);
+  assert(doc.querySelectorAll(".card-choice").length === 2, "skip draws two fresh candidates");
+  click(doc.querySelector(".card-choice"));
   assert(doc.getElementById("hint").textContent.indexOf("查看目标") !== -1, "still psychic phase after skip");
   assert(doc.getElementById("card-label").textContent.indexOf("第 1 轮") !== -1, "round unchanged after skip");
 
@@ -162,6 +169,8 @@ async function pickFile(name, content, inputId) {
   assert(doc.getElementById("screen").className.indexOf("open") === -1, "screen reset for new round");
   assert(doc.getElementById("hint").textContent.indexOf("粉队") !== -1, "turn switched to B");
 
+  assert(doc.querySelectorAll(".card-choice").length === 2, "next round starts with two candidates");
+  click(doc.querySelectorAll(".card-choice")[1]);
   click(doc.getElementById("controls").children[0]);
   click(doc.getElementById("controls").children[0]);
   click("btn-lock");
@@ -178,6 +187,7 @@ async function pickFile(name, content, inputId) {
   ws2.dispatchEvent(new window.Event("change", { bubbles: true }));
   doc.getElementById("select-first").value = "A";
   click("btn-start");
+  click(doc.querySelector(".card-choice"));
   click(doc.getElementById("controls").children[0]);
   click(doc.getElementById("controls").children[0]);
   const cx = (parseFloat(doc.getElementById("center-mark").style.left) / 100) * 1000;
@@ -198,8 +208,11 @@ async function pickFile(name, content, inputId) {
   const ws3 = doc.getElementById("opt-winscore");
   ws3.value = "2";
   ws3.dispatchEvent(new window.Event("change", { bubbles: true }));
+  doc.getElementById("opt-card-mode").value = "single";
+  doc.getElementById("opt-card-mode").dispatchEvent(new window.Event("change", { bubbles: true }));
   doc.getElementById("select-first").value = "A";
   click("btn-start");
+  assert(doc.querySelectorAll(".card-choice").length === 0 && doc.getElementById("hint").textContent.includes("查看目标"), "classic mode bypasses card choice");
 
   const centerOf = () => (parseFloat(doc.getElementById("center-mark").style.left) / 100) * 1000;
   const dragTo2Band = () => {
